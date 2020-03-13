@@ -56,6 +56,38 @@ BACKFIRE_BELIEF_THRESHOLD = 0.4
 ## for backfire_effect update-function: minimum influence to trigger the backfire effect
 BACKFIRE_INFLUENCE_THRESHOLD = 0.2
 
+#######################################
+## Parameters for influence graphs
+#######################################
+## for clique influence-graph: belief value of all agents on a clique influence graph
+CLIQUE_BELIEF_VALUE = 0.5
+
+## for 2_groups_disconnected influence-graph: belief value of all agents that can communicate in a 2 groups_disconnected influence graph
+GROUPS_DISCONNECTED_BELIEF_VALUE = 0.5
+
+## for 2_groups_faint ineraction-function: belief value of all agents that can strongly communicate in a 2 groups faintly connected influence graph
+GROUPS_FAINTLY_BELIEF_VALUE_STRONG = 0.5
+## for 2_groups_faint ineraction-function: belief value of all agents that can weakly communicate in a 2 groups faintly connected influence graph
+GROUPS_FAINTLY_BELIEF_VALUE_WEAK = 0.1
+
+## for 2_influencers_balanced influence-graph: level of influence both influencers exert on all others
+INFLUENCERS_BALANCED_OUTGOING_BOTH = 0.6
+## for 2_influencers_balanced influence-graph: level of influence both influencers receive from all others
+INFLUENCERS_BALANCED_INCOMING_BOTH = 0.0
+## for 2_influencers_balanced influence-graph: level of influence all other agents exert on all others
+INFLUENCERS_BALANCED_OTHERS = 0.1
+
+## for 2_influencers_unbalanced influence-graph: level of influence agent 0 exerts on all others
+INFLUENCERS_UNBALANCED_OUTGOING_FIRST = 0.8
+## for 2_influencers_unbalanced influence-graph: level of influence agent n-1 exerts on all others
+INFLUENCERS_UNBALANCED_OUTGOING_SECOND = 0.5
+## for 2_influencers_unbalanced influence-graph: level of influence agent 0 receives from all others
+INFLUENCERS_UNBALANCED_INCOMING_FIRST = 0.1
+## for 2_influencers_unbalanced influence-graph: level of influence agent n-1 receives from all others
+INFLUENCERS_UNBALANCED_INCOMING_SECOND = 0.1
+## for 2_influencers_unbalanced influence-graph: level of influence all other agents exert on all others
+INFLUENCERS_UNBALANCED_OTHERS = 0.2
+
 ############################################
 ## Representing belief states implementation
 ############################################
