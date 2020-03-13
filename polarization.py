@@ -133,6 +133,37 @@ def build_consensus_beliefs(num_agents, belief):
     """
     return [belief] * num_agents
 
+class Belief(Enum):
+    UNIFORM = 0
+    MILD = 1
+    EXTREME = 2
+    TRIPLE = 3
+    CONSENSUS = 4
+
+def build_belief(
+        belief_type,
+        num_agents=NUM_AGENTS,
+        low_pole=LOW_POLE,
+        high_pole=HIGH_POLE,
+        step=BELIEF_STEP,
+        consensus_value=CONSENSUS_VALUE):
+    """Build the initial belief state according to the `belief_type`.
+
+    Helper function when iterating over the `Belief` enum. The default values
+    are the constants defined at the beginning of the module.
+    """
+    if belief_type is Belief.UNIFORM:
+        return build_uniform_beliefs(num_agents)
+    if belief_type is Belief.MILD:
+        return build_mild_beliefs(num_agents, low_pole, high_pole, step)
+    if belief_type is Belief.EXTREME:
+        return build_extreme_beliefs(num_agents)
+    if belief_type is Belief.TRIPLE:
+        return build_triple_beliefs(num_agents)
+    if belief_type is Belief.CONSENSUS:
+        return build_consensus_beliefs(num_agents, consensus_value)
+    raise Exception('belief_type not recognized. Expected a `Belief`')
+
 ######################################################
 ## The Esteban-Ray polarization measure implementation
 ######################################################
@@ -252,6 +283,61 @@ def build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_va
     ## Sets the influence of all other agents on agent n-1.
     inf_graph[:-1, -1] = influencers_incoming_value_second
     return inf_graph
+
+class Influence(Enum):
+    CLIQUE = 0
+    GROUP_2_DISCONECTED = 1
+    GROUP_2_FAINT = 2
+    INFLUENCERS_2_BALANCED = 3
+    INFLUENCERS_2_UNBALANCED = 4
+
+
+def build_influence(
+        inf_type,
+        num_agents=NUM_AGENTS,
+        weak_belief=GROUPS_FAINTLY_BELIEF_VALUE_WEAK,
+        strong_belief=GROUPS_FAINTLY_BELIEF_VALUE_STRONG,
+        general_belief=None,
+        influencer_incoming_belief=None,
+        influencer_outgoing_belief=None,
+        influencer2_incoming_belief=INFLUENCERS_UNBALANCED_INCOMING_SECOND,
+        influencer2_outgoing_belief=INFLUENCERS_UNBALANCED_OUTGOING_SECOND):
+    """Build the initial influence graph according to the `inf_type`.
+
+    Helper function when iterating over the `Influence` enum. The default values
+    are the constants defined at the beginning of the module.
+    """
+    if inf_type is Influence.CLIQUE:
+        if general_belief is None:
+            general_belief = CLIQUE_BELIEF_VALUE
+        return build_inf_graph_clique(num_agents, general_belief)
+    if inf_type is Influence.GROUP_2_DISCONECTED:
+        if general_belief is None:
+            general_belief = GROUPS_DISCONNECTED_BELIEF_VALUE
+        return build_inf_graph_2_groups_disconnected(num_agents, general_belief)
+    if inf_type is Influence.GROUP_2_FAINT:
+        return build_inf_graph_2_groups_faint(num_agents, weak_belief, strong_belief)
+    if inf_type is Influence.INFLUENCERS_2_BALANCED:
+        if general_belief is None:
+            general_belief = INFLUENCERS_BALANCED_OTHERS
+        if influencer_incoming_belief is None:
+            influencer_incoming_belief = INFLUENCERS_BALANCED_INCOMING_BOTH
+        if influencer_outgoing_belief is None:
+            influencer_outgoing_belief = INFLUENCERS_BALANCED_OUTGOING_BOTH
+        return build_inf_graph_2_influencers_balanced(num_agents, influencer_incoming_belief, influencer_outgoing_belief, general_belief)
+    if inf_type is Influence.INFLUENCERS_2_UNBALANCED:
+        if general_belief is None:
+            general_belief = INFLUENCERS_UNBALANCED_OTHERS
+        if influencer_incoming_belief is None:
+            influencer_incoming_belief = INFLUENCERS_UNBALANCED_INCOMING_FIRST
+        if influencer2_incoming_belief is None:
+            influencer2_incoming_belief = INFLUENCERS_UNBALANCED_INCOMING_SECOND
+        if influencer_outgoing_belief is None:
+            influencer_outgoing_belief = INFLUENCERS_UNBALANCED_OUTGOING_FIRST
+        if influencer2_outgoing_belief is None:
+            influencer2_outgoing_belief = INFLUENCERS_UNBALANCED_OUTGOING_SECOND
+        return build_inf_graph_2_influencers_unbalanced(num_agents, influencer_outgoing_belief, influencer2_outgoing_belief, influencer_incoming_belief, influencer2_incoming_belief, general_belief)
+    raise Exception('inf_type not recognized. Expected an `Influence`')
 
 #####################################
 ## Update Functions Implementation
