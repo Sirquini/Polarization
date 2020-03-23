@@ -403,15 +403,9 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
 
 def run_simulation(belief_vec, inf_graph, max_time, num_bins, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     ## Initialize functions
-    ## TODO: Pass them as arguments, use and adapter to pol_er
-    belief_2_dist = make_belief_2_dist_func(num_bins)
-    pol_ER = make_pol_er_func(ALPHA, K)
-    def pol_ER_discretized(belief_state):
-        """Discretize belief state as necessary for computing Esteban-Ray
-        polarization and computes it.
-        """
-        return pol_ER(belief_2_dist(belief_state))
-    
+    ## TODO: Pass them as arguments
+    pol_ER_discretized = make_pol_er_discretized_func(ALPHA, K, num_bins)
+
     ## Creates temporary values to store evolution with time.
     belief_vec_state = belief_vec
     pol_state = pol_ER_discretized(belief_vec_state)
