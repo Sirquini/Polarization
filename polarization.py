@@ -208,14 +208,10 @@ def make_pol_er_func(alpha, K):
         bin_labels = dist[0]
         # recover bin probabilities
         bin_prob = dist[1]
-        # number of bins
-        num_bins = len(bin_labels)
-        # initialize polarization measure
-        pol = 0
-        # computes the esteban-ray measure
-        for i in range(num_bins):
-            for j in range(num_bins):
-                pol += ((bin_prob[i]**(1 + alpha)) * bin_prob[j]) * abs(bin_labels[i] - bin_labels[j]) 
+
+        diff = np.ones((len(bin_labels), 1)) @ bin_labels[np.newaxis]
+        diff = np.abs(diff - np.transpose(diff))
+        pol = (bin_prob ** (1 + alpha)) @ diff @ bin_prob
         # scales the measure by the constant K, and returns it.
         return K * pol
     return pol_ER
