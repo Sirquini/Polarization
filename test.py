@@ -27,11 +27,20 @@ def test_build_mild_beliefs():
     expected = [0.19999999999999998, 0.25, 0.3, 0.7, 0.75]
     
     test_function(polarization.build_mild_beliefs, expected, (num_agents, 0.3, 0.7, 0.05))
+
+    num_agents = 4
+    expected = [0.25, 0.3, 0.7, 0.75]
+    
+    test_function(polarization.build_mild_beliefs, expected, (num_agents, 0.3, 0.7, 0.05))
     
 def test_build_extreme_beliefs():
     num_agents = 5
     expected = [0, 0, 0, 1, 1]
 
+    test_function(polarization.build_extreme_beliefs, expected, (num_agents,))
+
+    num_agents = 4
+    expected = [0, 0, 1, 1]
     test_function(polarization.build_extreme_beliefs, expected, (num_agents,))
     
 def test_build_triple_beliefs():
@@ -42,6 +51,11 @@ def test_build_triple_beliefs():
     
     num_agents = 11
     expected = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
+
+    test_function(polarization.build_triple_beliefs, expected, (num_agents,))
+
+    num_agents = 9
+    expected = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
 
     test_function(polarization.build_triple_beliefs, expected, (num_agents,))
 
@@ -62,14 +76,14 @@ def test_belief_2_distribution():
 def test_pol_ER():
     pol_ER = polarization.make_pol_er_func(1.6, 1000)
     distribution = np.array([[0.05, 0.15, 0.25, 0.35, 0.45 ,0.55, 0.65, 0.75, 0.85, 0.95], [0.27272727, 0.0, 0.0, 0.0 , 0.0, 0.45454545, 0.0, 0.0, 0.0, 0.27272727]])
-    expected = 62.29879620526803
+    expected = 62.29879620526804
 
     test_function(pol_ER, expected, (distribution,))
 
 def test_pol_ER_discretized():
     pol_ER_discretized = polarization.make_pol_er_discretized_func(1.6, 1000, 10)
     beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
-    expected = 62.298798448024755
+    expected = 62.29879844802476
 
     test_function(pol_ER_discretized, expected, (beliefs,))
 
@@ -93,6 +107,13 @@ def test_build_inf_graph_2_groups_disconnected():
        [0.0, 0.0, 0.0, 0.3, 0.3],
        [0.0, 0.0, 0.0, 0.3, 0.3]]
     test_function_with_numpyall(polarization.build_inf_graph_2_groups_disconnected, expected, (num_agents, 0.3))
+    
+    num_agents = 4
+    expected = [[0.3, 0.3, 0.0, 0.0],
+       [0.3, 0.3, 0.0, 0.0],
+       [0.0, 0.0, 0.3, 0.3],
+       [0.0, 0.0, 0.3, 0.3]]
+    test_function_with_numpyall(polarization.build_inf_graph_2_groups_disconnected, expected, (num_agents, 0.3))
 
 def test_build_inf_graph_2_groups_faint():
     num_agents = 5
@@ -101,6 +122,14 @@ def test_build_inf_graph_2_groups_faint():
        [0.3, 0.3, 0.3, 0.1, 0.1],
        [0.1, 0.1, 0.1, 0.3, 0.3],
        [0.1, 0.1, 0.1, 0.3, 0.3]]
+
+    test_function_with_numpyall(polarization.build_inf_graph_2_groups_faint, expected, (num_agents, 0.1, 0.3))
+    
+    num_agents = 4
+    expected = [[0.3, 0.3, 0.1, 0.1],
+       [0.3, 0.3, 0.1, 0.1],
+       [0.1, 0.1, 0.3, 0.3],
+       [0.1, 0.1, 0.3, 0.3]]
 
     test_function_with_numpyall(polarization.build_inf_graph_2_groups_faint, expected, (num_agents, 0.1, 0.3))
 
@@ -113,6 +142,14 @@ def test_build_inf_graph_2_influencers_balanced():
        [0.1, 0.7, 0.7, 0.7, 0.7]]
     
     test_function_with_numpyall(polarization.build_inf_graph_2_influencers_balanced, expected, (num_agents, 0.1, 0.7, 0.2))
+    
+    num_agents = 4
+    expected = [[0.7, 0.7, 0.7, 0.1],
+       [0.1, 0.2, 0.2, 0.1],
+       [0.1, 0.2, 0.2, 0.1],
+       [0.1, 0.7, 0.7, 0.7]]
+    
+    test_function_with_numpyall(polarization.build_inf_graph_2_influencers_balanced, expected, (num_agents, 0.1, 0.7, 0.2))
 
 def test_build_inf_graph_2_influencers_unbalanced():
     num_agents = 5
@@ -121,6 +158,14 @@ def test_build_inf_graph_2_influencers_unbalanced():
        [0.3, 0.2, 0.2, 0.2, 0.1],
        [0.3, 0.2, 0.2, 0.2, 0.1],
        [0.3, 0.4, 0.4, 0.4, 0.4]]
+
+    test_function_with_numpyall(polarization.build_inf_graph_2_influencers_unbalanced, expected, (num_agents, 0.5, 0.4, 0.3, 0.1, 0.2))
+    
+    num_agents = 4
+    expected = [[0.5, 0.5, 0.5, 0.1],
+       [0.3, 0.2, 0.2, 0.1],
+       [0.3, 0.2, 0.2, 0.1],
+       [0.3, 0.4, 0.4, 0.4]]
 
     test_function_with_numpyall(polarization.build_inf_graph_2_influencers_unbalanced, expected, (num_agents, 0.5, 0.4, 0.3, 0.1, 0.2))
 
