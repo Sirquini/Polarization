@@ -350,6 +350,11 @@ def update_all(belief_vec, inf_graph, update_type, confbias_discount, backfire_b
     num_agents = len(belief_vec)
     return [update_agent_vs_all(belief_vec, inf_graph, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold) for agent in range(num_agents)]
 
+def update_all_np(belief_vec, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
+    """Updates the whole belief state"""
+    num_agents = len(belief_vec)
+    return [np.mean([update_agent_pair(belief_vec[agent], belief_vec[other], inf_graph[other, agent], update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold) for other in range(num_agents)]) for agent in range(num_agents)]
+
 def update_agent_vs_all(belief_vec, inf_graph, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     """Updates the belief value of one individual agent considering the effect
     of all other agents on him.
@@ -417,6 +422,35 @@ def run_simulation(belief_vec, inf_graph, max_time, num_bins, update_type, confb
         pol_state = pol_ER_discretized(belief_vec_state)
         # Appends the new polarization state to the log.
         pol_history.append(pol_state)
+        belief_history.append(belief_vec_state)
 
-    return np.array(pol_history)
+    return (np.array(pol_history), np.array(belief_history))
+
+import random
+
+def run_till_convergence(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, update_type=Update.CLASSIC, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
+    pol_ER_discretized = make_pol_er_discretized_func(ALPHA, K, num_bins)
+
+    ## Creates temporary values to store evolution with time.
+    belief_vec_state = belief_vec
+    pol_state = pol_ER_discretized(belief_vec_state)
+
+    belief_history = [belief_vec_state]
+    pol_history = [pol_state]
+
+    ## Execites simulation for max_time steps or convergence.
+    for _ in range(1, max_time):
+        
+        # Update beliefs
+        belief_vec_state = update_all_np(belief_vec_state, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold)
+        # Compute Esteban-Ray polarization.
+        pol_state = pol_ER_discretized(belief_vec_state)
+        # Appends the new polarization state to the log.
+        pol_history.append(pol_state)
+        belief_history.append(belief_vec_state)
+
+        if belief_history[-2] == belief_history[-1]:
+            break 
+
+    return (np.array(pol_history), np.array(belief_history), pol_history[-1])
 
