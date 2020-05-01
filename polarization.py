@@ -102,15 +102,15 @@ def build_mild_beliefs(num_agents, low_pole, high_pole, step):
     half of agents has belief decreasing from 0.25, and
     half has belief increasing from 0.75, all by the given step.
     """
-    middle = num_agents // 2
-    return [max(low_pole - step*(middle - i), 0) if i <= middle else min(high_pole - step*(middle - i + 1), 1) for i in range(num_agents)]
+    middle = math.ceil(num_agents / 2)
+    return [max(low_pole - step*(middle - i - 1), 0) if i < middle else min(high_pole - step*(middle - i), 1) for i in range(num_agents)]
 
 def build_extreme_beliefs(num_agents):
     """Builds extreme polarized belief state, in which half
     of the agents has belief 0, and half has belief 1.
     """
-    middle = num_agents // 2
-    return [0 if i <= middle else 1 for i in range(num_agents)]
+    middle = math.ceil(num_agents / 2)
+    return [0 if i < middle else 1 for i in range(num_agents)]
 
 def build_triple_beliefs(num_agents):
     """Builds three-pole belief state, in which each 
@@ -119,9 +119,9 @@ def build_triple_beliefs(num_agents):
     """
     beliefs = [0.0] * num_agents
     one_third = num_agents // 3
-    two_thirds = 2 * num_agents // 3
+    two_thirds = math.ceil(2 * num_agents / 3)
     for i in range(num_agents):
-        if i > two_thirds:
+        if i >= two_thirds:
             beliefs[i] = 1.0
         elif i >= one_third:
             beliefs[i] = 0.5
@@ -406,6 +406,7 @@ def run_simulation(belief_vec, inf_graph, max_time, num_bins, update_type, confb
     belief_vec_state = belief_vec
     pol_state = pol_ER_discretized(belief_vec_state)
 
+    belief_history = [belief_vec_state]
     pol_history = [pol_state]
 
     ## Execites simulation for max_time steps.
