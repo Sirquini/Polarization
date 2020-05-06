@@ -86,7 +86,7 @@ For creating the initial beliefs:
 - `build_inf_graph_2_influencers_balanced(num_agents, influencers_incoming_value, influencers_outgoing_value, others_belief_value)`
 - `build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_value_first, influencers_outgoing_value_second, influencers_incoming_value_first, influencers_incoming_value_second, others_belief_value)`
 
-> It is recommended to just use the general `build_belief(belief_type, **kargs)`.
+> It is recommended to just use the general `build_belief(belief_type, **kwargs)`.
 
 For creating the influence graph:
 
@@ -96,7 +96,7 @@ For creating the influence graph:
 - `build_inf_graph_2_influencers_balanced(num_agents, influencers_incoming_value, influencers_outgoing_value, others_belief_value)`
 - `build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_value_first, influencers_outgoing_value_second, influencers_incoming_value_first, influencers_incoming_value_second, others_belief_value)`
 
-> It is recommended to just use the general `build_influence(inf_type, **kargs)`.
+> It is recommended to just use the general `build_influence(inf_type, **kwargs)`.
 
 For creating an update function to use with the `Simulation` class:
 
