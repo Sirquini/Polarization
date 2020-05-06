@@ -440,7 +440,6 @@ def run_till_convergence(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS,
 
     ## Execites simulation for max_time steps or convergence.
     for _ in range(1, max_time):
-        
         # Update beliefs
         belief_vec_state = update_all_np(belief_vec_state, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold)
         # Compute Esteban-Ray polarization.
@@ -450,7 +449,41 @@ def run_till_convergence(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS,
         belief_history.append(belief_vec_state)
 
         if belief_history[-2] == belief_history[-1]:
-            break 
+            break
 
     return (np.array(pol_history), np.array(belief_history), pol_history[-1])
 
+def make_update_fn(update_type, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
+    def update_fn(belief_vec, inf_graph):
+        return update_all(belief_vec, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_belief_threshold)
+    return update_fn
+
+class Simulation:
+    def __init__(self, belief_vec, inf_graph, update_fn=make_update_fn(Update.CLASSIC), pol_measure=None, num_bins=NUM_BINS):
+        self.belief_vec = belief_vec
+        self.inf_graph = inf_graph
+        self.update_fn = update_fn
+        if pol_measure is None:
+            self.pol_measure = make_pol_er_discretized_func(ALPHA, K, num_bins)
+        else:
+            self.pol_measure = pol_measure
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        result = (self.belief_vec, self.pol_measure(self.belief_vec))
+        self.belief_vec = self.update_fn(self.belief_vec, self.inf_graph)
+        return result
+    
+    def run(self, max_time=100, stop_at_convergence=True):
+        belief_history = []
+        pol_history = []
+        for belief_vec_state, pol_state in self:
+            # Stop if convergence is reached
+            if stop_at_convergence and belief_history and belief_history[-1] == belief_vec_state:
+                break
+
+            belief_history.append(belief_vec_state)
+            pol_history.append(pol_state)
+        return (np.array(pol_history), np.array(belief_history), pol_history[-1])
