@@ -492,14 +492,30 @@ class Simulation:
         self.belief_vec = self.update_fn(self.belief_vec, self.inf_graph)
         return result
     
-    def run(self, max_time=100, stop_at_convergence=True):
+    def run(self, max_time=100, smart_stop=True):
+        """Runs the current Simulation setup.
+        
+        For each time step, calculate the polarization value and the belief
+        state. If `smart_stop` is `True`, the simulation stops when the
+        belief state does not change from one time step to the next or if
+        `max_time` is reached.
+
+        Args:
+          - max_time (int, default 100): The time step to stop the simulation.
+          - smart_stop (Boolean, default True): Stops the simulation if the
+            belief state stabilizes or `max_time` is reached.
+        
+        Returns:
+          A tuple of NumPy Arrays with each polarization value, its
+          corresponding  belief state, and the last polarization value.
+          (pol_history, blf_history, pol_history[-1]).
+        """
         belief_history = []
         pol_history = []
         for _, (belief_vec_state, pol_state) in zip(range(max_time), self):
             # Stop if a stable state is reached
-            if stop_at_convergence and belief_history and belief_history[-1] == belief_vec_state:
+            if smart_stop and belief_history and belief_history[-1] == belief_vec_state:
                 break
-
             belief_history.append(belief_vec_state)
             pol_history.append(pol_state)
         return (np.array(pol_history), np.array(belief_history), pol_history[-1])

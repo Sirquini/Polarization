@@ -22,7 +22,7 @@ pip install notebook
 
 ## The `Simulation` Class
 
-You can run simulations creating an instance of the `Simulation` class and either its `run(max_time=100, stop_at_convergence=True)` method or iterating it like any other python iterator. As always you need to provide the initial belief state, an influence graph, and the belief update function. Optionally you can define an alternative function for computing polarization, other than Esteban-Ray.
+You can run simulations creating an instance of the `Simulation` class and either its `run(max_time=100, smart_stop=True)` method or iterating it like any other python iterator. As always you need to provide the initial belief state, an influence graph, and the belief update function. Optionally you can define an alternative function for computing polarization, other than Esteban-Ray.
 
 By default, `Simulation` uses the `CLASSIC` update function, but can be changed by passing an `update_fn` parameter. Also by default, the polarization measure is Esteban-Ray with 201 bins to discretize the belief state into a distribution, you can change the polarization measure by passing a `pol_measure` function, or just change the `num_bins` argument.
 
