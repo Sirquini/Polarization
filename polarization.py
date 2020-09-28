@@ -88,6 +88,9 @@ INFLUENCERS_UNBALANCED_INCOMING_SECOND = 0.1
 ## for 2_influencers_unbalanced influence-graph: level of influence all other agents exert on all others
 INFLUENCERS_UNBALANCED_OTHERS = 0.2
 
+## for circular influence-graph: belief value of all agents on a circular influence graph
+CIRCULAR_BELIEF_VALUE = 0.5
+
 ############################################
 ## Representing belief states implementation
 ############################################
@@ -280,12 +283,21 @@ def build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_va
     inf_graph[:-1, -1] = influencers_incoming_value_second
     return inf_graph
 
+def build_inf_graph_circular(num_agents, value):
+    """Returns the imfluemce graph for "circular influence" scenario."""
+    inf_graph = np.zeros((num_agents, num_agents))
+    for i in range(num_agents-1):
+        inf_graph[i, i+1] = value
+    inf_graph[-1, 0] = value
+    return inf_graph
+
 class Influence(Enum):
     CLIQUE = 0
     GROUP_2_DISCONECTED = 1
     GROUP_2_FAINT = 2
     INFLUENCERS_2_BALANCED = 3
     INFLUENCERS_2_UNBALANCED = 4
+    CIRCULAR = 5
 
 
 def build_influence(
@@ -333,6 +345,10 @@ def build_influence(
         if influencer2_outgoing_belief is None:
             influencer2_outgoing_belief = INFLUENCERS_UNBALANCED_OUTGOING_SECOND
         return build_inf_graph_2_influencers_unbalanced(num_agents, influencer_outgoing_belief, influencer2_outgoing_belief, influencer_incoming_belief, influencer2_incoming_belief, general_belief)
+    if inf_type is Influence.CIRCULAR:
+        if general_belief is None:
+            general_belief = CIRCULAR_BELIEF_VALUE
+        return build_inf_graph_circular(num_agents, general_belief) 
     raise Exception('inf_type not recognized. Expected an `Influence`')
 
 #####################################
@@ -404,7 +420,7 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
 
 def run_simulation(belief_vec, inf_graph, max_time, num_bins, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     ## Initialize functions
-    ## TODO: Pass them as arguments
+    ## TODO: Pass them as arguments. Done with Simlation Class.
     pol_ER_discretized = make_pol_er_discretized_func(ALPHA, K, num_bins)
 
     ## Creates temporary values to store evolution with time.

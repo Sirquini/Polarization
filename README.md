@@ -28,7 +28,7 @@ You only need to import the `polarization` module, which provides:
 
 - `build_belief`: Helper function that returns a belief vector based on a `Belief` scenario type (`UNIFORM`, `MILD`, `EXTREME`, `TRIPLE`, `CONSENSUS`).
 
-- `build_influence`: Helper function that returns an influence graph based on an `Influence` scenario type (`CLIQUE`, `GROUP_2_DISCONECTED`, `GROUP_2_FAINT`, `INFLUENCERS_2_BALANCED`, `INFLUENCERS_2_UNBALANCED`).
+- `build_influence`: Helper function that returns an influence graph based on an `Influence` scenario type (`CLIQUE`, `GROUP_2_DISCONECTED`, `GROUP_2_FAINT`, `INFLUENCERS_2_BALANCED`, `INFLUENCERS_2_UNBALANCED`, `CIRCULAR`).
 
 As such, running a simulation with mostly default parameters, is as simple as:
 
@@ -95,6 +95,7 @@ For creating the influence graph:
 - `build_inf_graph_2_groups_faint(num_agents, weak_belief_value, strong_belief_value)`
 - `build_inf_graph_2_influencers_balanced(num_agents, influencers_incoming_value, influencers_outgoing_value, others_belief_value)`
 - `build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_value_first, influencers_outgoing_value_second, influencers_incoming_value_first, influencers_incoming_value_second, others_belief_value)`
+- `build_inf_graph_circular(num_agents, value)`
 
 > It is recommended to just use the general `build_influence(inf_type, **kwargs)`.
 

@@ -83,7 +83,7 @@ def test_pol_ER():
 def test_pol_ER_discretized():
     pol_ER_discretized = polarization.make_pol_er_discretized_func(1.6, 1000, 10)
     beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
-    expected = 62.29879844802476
+    expected = 62.298798448024755
 
     test_function(pol_ER_discretized, expected, (beliefs,))
 
@@ -168,6 +168,29 @@ def test_build_inf_graph_2_influencers_unbalanced():
        [0.3, 0.4, 0.4, 0.4]]
 
     test_function_with_numpyall(polarization.build_inf_graph_2_influencers_unbalanced, expected, (num_agents, 0.5, 0.4, 0.3, 0.1, 0.2))
+
+def test_build_inf_graph_circular():
+    num_agents = 6
+    i = 0.6
+    expected = [[0, i, 0, 0, 0, 0],
+       [0, 0, i, 0, 0, 0],
+       [0, 0, 0, i, 0, 0],
+       [0, 0, 0, 0, i, 0],
+       [0, 0, 0, 0, 0, i],
+       [i, 0, 0, 0, 0, 0]]
+
+    test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
+    
+    
+    num_agents = 2
+    expected = [[0, i], [i, 0]]
+
+    test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
+
+    num_agents = 1
+    expected = [[i]]
+
+    test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
 
 def test_function(fn, expected, params=None):
     """Test the passed `fn` output against the `expected` result.
@@ -314,6 +337,7 @@ if __name__ == "__main__":
     test_build_inf_graph_2_groups_faint()
     test_build_inf_graph_2_influencers_balanced()
     test_build_inf_graph_2_influencers_unbalanced()
+    test_build_inf_graph_circular()
 
     test_update_agent_pair()
     test_update_agent_vs_all()
