@@ -495,8 +495,8 @@ class Simulation:
     def run(self, max_time=100, stop_at_convergence=True):
         belief_history = []
         pol_history = []
-        for belief_vec_state, pol_state in self:
-            # Stop if convergence is reached
+        for _, (belief_vec_state, pol_state) in zip(range(max_time), self):
+            # Stop if a stable state is reached
             if stop_at_convergence and belief_history and belief_history[-1] == belief_vec_state:
                 break
 
