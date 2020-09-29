@@ -146,14 +146,15 @@ class Belief(Enum):
 def build_belief(
         belief_type,
         num_agents=NUM_AGENTS,
+        *,
         low_pole=LOW_POLE,
         high_pole=HIGH_POLE,
         step=BELIEF_STEP,
         consensus_value=CONSENSUS_VALUE):
-    """Build the initial belief state according to the `belief_type`.
+    """Builds the initial belief state according to the `belief_type`.
 
     Helper function when iterating over the `Belief` enum. The default values
-    are the constants defined at the beginning of the module.
+    are the constants defined at the beginning of the polarization module.
     """
     if belief_type is Belief.UNIFORM:
         return build_uniform_beliefs(num_agents)
@@ -303,6 +304,7 @@ class Influence(Enum):
 def build_influence(
         inf_type,
         num_agents=NUM_AGENTS,
+        *,
         weak_belief=GROUPS_FAINTLY_BELIEF_VALUE_WEAK,
         strong_belief=GROUPS_FAINTLY_BELIEF_VALUE_STRONG,
         general_belief=None,
@@ -310,10 +312,10 @@ def build_influence(
         influencer_outgoing_belief=None,
         influencer2_incoming_belief=INFLUENCERS_UNBALANCED_INCOMING_SECOND,
         influencer2_outgoing_belief=INFLUENCERS_UNBALANCED_OUTGOING_SECOND):
-    """Build the initial influence graph according to the `inf_type`.
+    """Builds the initial influence graph according to the `inf_type`.
 
     Helper function when iterating over the `Influence` enum. The default values
-    are the constants defined at the beginning of the module.
+    are the constants defined at the beginning of the polarization module.
     """
     if inf_type is Influence.CLIQUE:
         if general_belief is None:
