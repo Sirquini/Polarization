@@ -39,7 +39,7 @@ CONSENSUS_VALUE = 0.5
 ######################################################
 
 ## number of bins when discretizing the belief state
-NUM_BINS = 201
+NUM_BINS = 5
 ## parameter alpha set to what Esteban and Ray suggest
 ALPHA = 1.6
 ## scaling factor for polarization measure
