@@ -168,6 +168,31 @@ def build_belief(
         return build_consensus_beliefs(num_agents, consensus_value)
     raise Exception('belief_type not recognized. Expected a `Belief`')
 
+def build_nx_blf(blf: Belief, num_agents=NUM_AGENTS, **kwargs):
+    """Evenly distributes the agents beliefs into subgroups.
+
+    Same inputs as `build_belief`, will call it in case of finding a non-defined case
+    The default values are the constants defined at the beginning of the polarization module.
+    """
+    if blf is Belief.MILD:
+        middle = math.ceil(num_agents / 2)
+        return [0.8 * i / num_agents if i < middle else 0.2 + 0.8 * i / num_agents for i in range(num_agents)]
+    if blf is Belief.EXTREME:
+        middle = math.ceil(num_agents / 2)
+        return [0.4 * i / num_agents if i < middle else 0.6 + 0.4 * i / num_agents for i in range(num_agents)]
+    if blf is Belief.TRIPLE:
+        beliefs = [0.0] * num_agents
+        last_third = num_agents // 3
+        middle_third = math.ceil(num_agents / 3)
+        first_third = num_agents - middle_third - last_third
+        offset = 0
+        for i, segment in enumerate((first_third, middle_third, last_third)):
+            for j in range(segment):
+                beliefs[j+offset] = 0.2 * j / segment + (0.4 * i)
+            offset += segment
+        return beliefs
+    return build_belief(blf, num_agents, **kwargs)
+
 ######################################################
 ## The Esteban-Ray polarization measure implementation
 ######################################################
