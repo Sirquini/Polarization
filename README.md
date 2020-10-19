@@ -1,4 +1,4 @@
-# A model for the dynamics of polarization
+# A Model for the Dynamics of Polarization
 
 All the functions and structures needed are located in `polarization.py`. Implemented for Python 3.
 
