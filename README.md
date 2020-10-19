@@ -4,7 +4,7 @@ All the functions and structures needed are located in `polarization.py`. Implem
 
 ## Dependencies
 
-This project depends on [NumPy](https://numpy.org/index.html) which may be installed from a console using pip:
+This project depends on [NumPy](https://numpy.org/index.html) (tested on 1.19.0) which may be installed from a console using pip:
 
 ```
 pip install numpy
@@ -13,12 +13,24 @@ pip install numpy
 Optionally, we recommend installing [Matplotlib](https://matplotlib.org/) for creating graphs and charts, , and [Jupyter Notebooks](https://jupyter.org/index.html) for running simulations interactively.
 
 ```
-pip install matplotlib
+pip install matplotlib notebook
 ```
 
+To install all dependencies you can also run:
+
 ```
-pip install notebook
+pip install -r requirements.txt
 ```
+
+## Running Simulations
+
+If you want to try for yourself, or recreate, the simulations in `Simulations.ipynb`, download this repository, install the corresponding dependencies, and run the jupyter notebook server with access to `polarization.py`. For example, in the same folder as the `polarization.py` file is located, run:
+
+```
+jupyter notebook
+```
+
+Select `Simulations.ipynb`, and make sure to set it as trusted, or just re-run the entire notebook.
 
 ## The `Simulation` Class
 
@@ -56,7 +68,7 @@ For customizing the polarization measure with the `Simulation` class:
 
 - `make_pol_er_discretized_func(alpha, K, num_bins)`: The resulting function is of type `pol_ER_discretized(belief_state)`.
 
-For more examples you can look at code in the Jupyter Notebooks of this repository. `Simulations.ipynb` for the usage of the `polarization` module.
+For more examples you can look at code in the Jupyter Notebooks of this repository, e.g. `Simulations.ipynb` for the usage of the `polarization` module.
 
 ## New Initial Belief Configurations
 
