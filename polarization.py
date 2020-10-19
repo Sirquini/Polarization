@@ -4,7 +4,7 @@ Polarization
 ============
 
 Provides functions for:
-- Creating initial belief states for various scenarios.
+- Creating initial belief configurations for various scenarios.
 - Creating influence graphs for various scenarios.
 - The Esteban-Ray polarization measure.
 - Discretizing a belief state into a distribution.
@@ -24,15 +24,17 @@ import numpy as np
 ## number of agents
 NUM_AGENTS = 100
 
+## for consensus belief-function: belief value for the consensus belief state
+CONSENSUS_VALUE = 0.5
+
+## Values for the old belief configurations:
+## -----------------------------------------
 ## for mildly-polarized belief-function: belief value for the upper end of the low pole of a mildly polarized belief state
 LOW_POLE = 0.25
 ## for mildly-polarized belief-function: belief value for the lower end of the high pole of a mildly polarized belief state
 HIGH_POLE = 0.75
 ## for mildly-polarized belief-function: step of belief change from agent to agent in mildly polarized belief state
 BELIEF_STEP = 0.01
-
-## for consensus belief-function: belief value for the consensus belief state
-CONSENSUS_VALUE = 0.5
 
 ######################################################
 ## Parameters for the Esteban-Ray polarization measure
@@ -59,16 +61,17 @@ BACKFIRE_INFLUENCE_THRESHOLD = 0.2
 #######################################
 ## Parameters for influence graphs
 #######################################
+
 ## for clique influence-graph: belief value of all agents on a clique influence graph
-CLIQUE_BELIEF_VALUE = 0.5
+CLIQUE_INF_VALUE = 0.5
 
 ## for 2_groups_disconnected influence-graph: belief value of all agents that can communicate in a 2 groups_disconnected influence graph
-GROUPS_DISCONNECTED_BELIEF_VALUE = 0.5
+GROUPS_DISCONNECTED_INF_VALUE = 0.5
 
 ## for 2_groups_faint ineraction-function: belief value of all agents that can strongly communicate in a 2 groups faintly connected influence graph
-GROUPS_FAINTLY_BELIEF_VALUE_STRONG = 0.5
+GROUPS_FAINTLY_INF_VALUE_STRONG = 0.5
 ## for 2_groups_faint ineraction-function: belief value of all agents that can weakly communicate in a 2 groups faintly connected influence graph
-GROUPS_FAINTLY_BELIEF_VALUE_WEAK = 0.1
+GROUPS_FAINTLY_INF_VALUE_WEAK = 0.1
 
 ## for 2_influencers_balanced influence-graph: level of influence both influencers exert on all others
 INFLUENCERS_BALANCED_OUTGOING_BOTH = 0.6
@@ -89,11 +92,47 @@ INFLUENCERS_UNBALANCED_INCOMING_SECOND = 0.1
 INFLUENCERS_UNBALANCED_OTHERS = 0.2
 
 ## for circular influence-graph: belief value of all agents on a circular influence graph
-CIRCULAR_BELIEF_VALUE = 0.5
+CIRCULAR_INF_VALUE = 0.5
 
 ############################################
 ## Representing belief states implementation
 ############################################
+
+class Belief(Enum):
+    UNIFORM = 0
+    MILD = 1
+    EXTREME = 2
+    TRIPLE = 3
+    CONSENSUS = 4
+
+## Current representation
+
+def build_belief(belief_type: Belief, num_agents=NUM_AGENTS, **kwargs):
+    """Evenly distributes the agents beliefs into subgroups.
+
+    Same inputs as `build_old_belief`, will call it in case of finding a non-defined case
+    The default values are the constants defined at the beginning of the polarization module.
+    """
+    if belief_type is Belief.MILD:
+        middle = math.ceil(num_agents / 2)
+        return [0.8 * i / num_agents if i < middle else 0.2 + 0.8 * i / num_agents for i in range(num_agents)]
+    if belief_type is Belief.EXTREME:
+        middle = math.ceil(num_agents / 2)
+        return [0.4 * i / num_agents if i < middle else 0.6 + 0.4 * i / num_agents for i in range(num_agents)]
+    if belief_type is Belief.TRIPLE:
+        beliefs = [0.0] * num_agents
+        last_third = num_agents // 3
+        middle_third = math.ceil(num_agents / 3)
+        first_third = num_agents - middle_third - last_third
+        offset = 0
+        for i, segment in enumerate((first_third, middle_third, last_third)):
+            for j in range(segment):
+                beliefs[j+offset] = 0.2 * j / segment + (0.4 * i)
+            offset += segment
+        return beliefs
+    return build_old_belief(belief_type, num_agents, **kwargs)
+
+## Old representation
 
 def build_uniform_beliefs(num_agents):
     """ Build uniform belief state.
@@ -136,14 +175,7 @@ def build_consensus_beliefs(num_agents, belief):
     """
     return [belief] * num_agents
 
-class Belief(Enum):
-    UNIFORM = 0
-    MILD = 1
-    EXTREME = 2
-    TRIPLE = 3
-    CONSENSUS = 4
-
-def build_belief(
+def build_old_belief(
         belief_type,
         num_agents=NUM_AGENTS,
         *,
@@ -167,31 +199,6 @@ def build_belief(
     if belief_type is Belief.CONSENSUS:
         return build_consensus_beliefs(num_agents, consensus_value)
     raise Exception('belief_type not recognized. Expected a `Belief`')
-
-def build_nx_blf(blf: Belief, num_agents=NUM_AGENTS, **kwargs):
-    """Evenly distributes the agents beliefs into subgroups.
-
-    Same inputs as `build_belief`, will call it in case of finding a non-defined case
-    The default values are the constants defined at the beginning of the polarization module.
-    """
-    if blf is Belief.MILD:
-        middle = math.ceil(num_agents / 2)
-        return [0.8 * i / num_agents if i < middle else 0.2 + 0.8 * i / num_agents for i in range(num_agents)]
-    if blf is Belief.EXTREME:
-        middle = math.ceil(num_agents / 2)
-        return [0.4 * i / num_agents if i < middle else 0.6 + 0.4 * i / num_agents for i in range(num_agents)]
-    if blf is Belief.TRIPLE:
-        beliefs = [0.0] * num_agents
-        last_third = num_agents // 3
-        middle_third = math.ceil(num_agents / 3)
-        first_third = num_agents - middle_third - last_third
-        offset = 0
-        for i, segment in enumerate((first_third, middle_third, last_third)):
-            for j in range(segment):
-                beliefs[j+offset] = 0.2 * j / segment + (0.4 * i)
-            offset += segment
-        return beliefs
-    return build_belief(blf, num_agents, **kwargs)
 
 ######################################################
 ## The Esteban-Ray polarization measure implementation
@@ -330,8 +337,8 @@ def build_influence(
         inf_type,
         num_agents=NUM_AGENTS,
         *,
-        weak_belief=GROUPS_FAINTLY_BELIEF_VALUE_WEAK,
-        strong_belief=GROUPS_FAINTLY_BELIEF_VALUE_STRONG,
+        weak_belief=GROUPS_FAINTLY_INF_VALUE_WEAK,
+        strong_belief=GROUPS_FAINTLY_INF_VALUE_STRONG,
         general_belief=None,
         influencer_incoming_belief=None,
         influencer_outgoing_belief=None,
@@ -344,11 +351,11 @@ def build_influence(
     """
     if inf_type is Influence.CLIQUE:
         if general_belief is None:
-            general_belief = CLIQUE_BELIEF_VALUE
+            general_belief = CLIQUE_INF_VALUE
         return build_inf_graph_clique(num_agents, general_belief)
     if inf_type is Influence.GROUP_2_DISCONECTED:
         if general_belief is None:
-            general_belief = GROUPS_DISCONNECTED_BELIEF_VALUE
+            general_belief = GROUPS_DISCONNECTED_INF_VALUE
         return build_inf_graph_2_groups_disconnected(num_agents, general_belief)
     if inf_type is Influence.GROUP_2_FAINT:
         return build_inf_graph_2_groups_faint(num_agents, weak_belief, strong_belief)
@@ -374,7 +381,7 @@ def build_influence(
         return build_inf_graph_2_influencers_unbalanced(num_agents, influencer_outgoing_belief, influencer2_outgoing_belief, influencer_incoming_belief, influencer2_incoming_belief, general_belief)
     if inf_type is Influence.CIRCULAR:
         if general_belief is None:
-            general_belief = CIRCULAR_BELIEF_VALUE
+            general_belief = CIRCULAR_INF_VALUE
         return build_inf_graph_circular(num_agents, general_belief) 
     raise Exception('inf_type not recognized. Expected an `Influence`')
 

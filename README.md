@@ -30,7 +30,7 @@ By default, `Simulation` uses the `CLASSIC` (or rational) update function, but c
 import polarization as plr
 
 simulation = plr.Simulation(
-    plr.build_nx_blf(plr.Belief.UNIFORM),
+    plr.build_belief(plr.Belief.UNIFORM),
     plr.build_influence(plr.Influence.CLIQUE),
     plr.make_update_fn(plr.Update.CLASSIC)
 )
@@ -56,7 +56,7 @@ For customizing the polarization measure with the `Simulation` class:
 
 - `make_pol_er_discretized_func(alpha, K, num_bins)`: The resulting function is of type `pol_ER_discretized(belief_state)`.
 
-For more examples you can look at code in the Jupyter Notebooks of this repository. `Simulations.ipynb` for the usage of the `polarization` module, and `Old Simulations.ipynb` for the theory behind.
+For more examples you can look at code in the Jupyter Notebooks of this repository. `Simulations.ipynb` for the usage of the `polarization` module.
 
 ## New Initial Belief Configurations
 
@@ -71,7 +71,7 @@ There is a new function that allows us to generate new initial belief configurat
 | EXTREME     | o |   |   |   | o |
 | TRIPLE      | o |   | o |   | o |
 
-To generate such configurations `build_nx_blf` is provided.
+To generate such configurations `build_belief` is provided.
 
 ## Alternative Functions for Simulations
 
@@ -81,20 +81,20 @@ Apart from the `Simulation` class, the `polarization` module provides:
  is reached (defaults to `100`), given an initial belief vector, influence graph,
  and update function (defaults to `CLASSIC`). It behaves like calling the `Simulation`'s `run()` method.
 
-- `build_nx_blf`: Function that returns a belief vector based on a `Belief` scenario type (`UNIFORM`, `MILD`, `EXTREME`, `TRIPLE`, `CONSENSUS`), this functions produces the new definition of Belief configuration, as such, it is the recommended way of building initial belief vectors.
+- `build_belief`: Function that returns a belief vector based on a `Belief` scenario type (`UNIFORM`, `MILD`, `EXTREME`, `TRIPLE`, `CONSENSUS`), this functions produces the new definition of Belief configuration, as such, it is the recommended way of building initial belief vectors.
 
 - `build_influence`: Helper function that returns an influence graph based on an `Influence` scenario type (`CLIQUE`, `GROUP_2_DISCONECTED`, `GROUP_2_FAINT`, `INFLUENCERS_2_BALANCED`, `INFLUENCERS_2_UNBALANCED`, `CIRCULAR`).
 
-- `build_belief`: **Legacy** helper function that returns a belief vector based on a `Belief` scenario type (`UNIFORM`, `MILD`, `EXTREME`, `TRIPLE`, `CONSENSUS`). **Deprecated.** Produces different output than using `build_nx_blf`.
+- `build_old_belief`: **Legacy** helper function that returns a belief vector based on a `Belief` scenario type (`UNIFORM`, `MILD`, `EXTREME`, `TRIPLE`, `CONSENSUS`). **Deprecated.** Produces different output than using `build_belief`.
 
-As such, running a simulation with mostly default parameters can also by done as follows:
+Now, running a simulation with mostly default parameters can also by done as follows:
 
 ```python
 import polarization as plr
 
 # By default the number of agents is 100,
 # but can be set as an argument.
-beliefs_vec = plr.build_nx_blf(plr.Belief.UNIFORM, num_agents=100)
+beliefs_vec = plr.build_belief(plr.Belief.UNIFORM, num_agents=100)
 
 # For a CLIQUE influence we could change the influence value,
 # defaults to 0.5, by passing the general_belief argument.
@@ -109,7 +109,7 @@ polarization_history, belief_history, pol = run_till_convergence(belief_vec, inf
 
 For creating the initial beliefs:
 
-- `build_nx_blf(blf: Belief, num_agents)`
+- `build_belief(blf: Belief, num_agents, **kwargs)`
 
 For creating the influence graph:
 
@@ -130,4 +130,4 @@ For creating the legacy initial beliefs:
 - `build_triple_beliefs(num_agents)`
 - `build_consensus_beliefs(num_agents, belief)`
 
-> It is recommended to just use the general `build_belief(belief_type, **kwargs)`.
+> It is recommended to just use the general `build_old_belief(belief_type, **kwargs)`.

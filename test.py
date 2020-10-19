@@ -76,45 +76,45 @@ def test_build_consensus_beliefs():
 
     return (t1,)
 
-def test_build_nx_beliefs():
+def test_build_beliefs():
     num_agents = 5
     expected = [0.0, 0.25, 0.5, 0.75, 1.0]
 
-    t1 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.UNIFORM, num_agents))
+    t1 = test_function(polarization.build_belief, expected, (polarization.Belief.UNIFORM, num_agents))
 
     num_agents = 5
     expected = [0.0, 0.16, 0.32, 0.6800000000000002, 0.8400000000000001]
     
-    t2 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.MILD, num_agents))
+    t2 = test_function(polarization.build_belief, expected, (polarization.Belief.MILD, num_agents))
 
     num_agents = 4
     expected = [0.0, 0.2, 0.6000000000000001, 0.8]
     
-    t3 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.MILD, num_agents))
+    t3 = test_function(polarization.build_belief, expected, (polarization.Belief.MILD, num_agents))
 
     num_agents = 5
     expected = [0.0, 0.08, 0.16, 0.8400000000000001, 0.9199999999999999]
 
-    t4 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.EXTREME, num_agents))
+    t4 = test_function(polarization.build_belief, expected, (polarization.Belief.EXTREME, num_agents))
 
     num_agents = 4
     expected = [0.0, 0.1, 0.8, 0.9]
-    t5 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.EXTREME, num_agents))
+    t5 = test_function(polarization.build_belief, expected, (polarization.Belief.EXTREME, num_agents))
     
     num_agents = 7
     expected = [0.0, 0.1, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.9]
 
-    t6 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.TRIPLE, num_agents))
+    t6 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
     
     num_agents = 11
     expected = [0.0, 0.05, 0.1, 0.15000000000000002, 0.4, 0.45, 0.5, 0.55, 0.8, 0.8666666666666667, 0.9333333333333333]
 
-    t7 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.TRIPLE, num_agents))
+    t7 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
 
     num_agents = 9
     expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.8666666666666667, 0.9333333333333333]
 
-    t8 = test_function(polarization.build_nx_blf, expected, (polarization.Belief.TRIPLE, num_agents))
+    t8 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
 
     return (t1, t2, t3, t4, t5, t6, t7, t8)
 
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     tests.extend(test_build_extreme_beliefs())
     tests.extend(test_build_triple_beliefs())
     tests.extend(test_build_consensus_beliefs())
-    tests.extend(test_build_nx_beliefs())
+    tests.extend(test_build_beliefs())
 
     tests.extend(test_belief_2_distribution())
     tests.extend(test_pol_ER())
