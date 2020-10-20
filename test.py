@@ -16,6 +16,79 @@ def test_equality(expected, actual, name):
         print("{} \x1b[32mok\x1b[0m".format(message))
         return True
 
+def test_function(fn, expected, params=None):
+    """Tests the passed `fn` output against the `expected` result.
+
+    Args:
+      fn: The function to test.
+      expected: The expected output from the function to succed the test.
+      params: Optional, tuple with the params passed to `fn`.
+    
+    Output:
+      Prints the test results.
+    
+    Returns:
+      Boolean `True` if the equality test passes. `False` otherwise.
+    """
+    if params is not None:
+        actual = fn(*params)
+    else:
+        actual = fn()
+    
+    return test_equality(expected, actual, fn.__name__)
+
+def test_function_with_numpyall(fn, expected, params=None):
+    """Tests the passed `fn` output against the `expected` result.
+
+    Args:
+      fn: The function to test.
+      expected: The expected output from the function to succed the test.
+      params: Optional, tuple with the params passed to `fn`.
+    
+    Output:
+      Prints the test results.
+
+    Returns:
+      Boolean `True` if the equality test passes. `False` otherwise.
+    """
+    if params is not None:
+        actual = fn(*params)
+    else:
+        actual = fn()
+    
+    result = test_equality(True, (expected == actual).all(), fn.__name__)
+    if not result:
+        print("Expected:", expected)
+        print("  Actual:", actual)
+    
+    return result
+
+def test_function_with_numpyallclose(fn, expected, params=None):
+    """Test the passed `fn` output against the `expected` result.
+
+    Args:
+      fn: The function to test.
+      expected: The expected output from the function to succed the test.
+      params: Optional, tuple with the params passed to `fn`.
+    
+    Output:
+      Prints the test results.
+    
+    Returns:
+      Boolean `True` if the equality test passes. `False` otherwise.
+    """
+    if params is not None:
+        actual = fn(*params)
+    else:
+        actual = fn()
+    
+    result = test_equality(True, np.allclose(expected, actual), fn.__name__)
+    if not result:
+        print("Expected:", expected)
+        print("  Actual:", actual)
+    
+    return result
+
 def test_build_uniform_beliefs():
     num_agents = 5
     expected = [0.0, 0.25, 0.5, 0.75, 1.0]
@@ -259,79 +332,6 @@ def test_build_inf_graph_circular():
     t3 = test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
 
     return (t1, t2, t3)
-
-def test_function(fn, expected, params=None):
-    """Tests the passed `fn` output against the `expected` result.
-
-    Args:
-      fn: The function to test.
-      expected: The expected output from the function to succed the test.
-      params: Optional, tuple with the params passed to `fn`.
-    
-    Output:
-      Prints the test results.
-    
-    Returns:
-      Boolean `True` if the equality test passes. `False` otherwise.
-    """
-    if params is not None:
-        actual = fn(*params)
-    else:
-        actual = fn()
-    
-    return test_equality(expected, actual, fn.__name__)
-
-def test_function_with_numpyall(fn, expected, params=None):
-    """Tests the passed `fn` output against the `expected` result.
-
-    Args:
-      fn: The function to test.
-      expected: The expected output from the function to succed the test.
-      params: Optional, tuple with the params passed to `fn`.
-    
-    Output:
-      Prints the test results.
-
-    Returns:
-      Boolean `True` if the equality test passes. `False` otherwise.
-    """
-    if params is not None:
-        actual = fn(*params)
-    else:
-        actual = fn()
-    
-    result = test_equality(True, (expected == actual).all(), fn.__name__)
-    if not result:
-        print("Expected:", expected)
-        print("  Actual:", actual)
-    
-    return result
-
-def test_function_with_numpyallclose(fn, expected, params=None):
-    """Test the passed `fn` output against the `expected` result.
-
-    Args:
-      fn: The function to test.
-      expected: The expected output from the function to succed the test.
-      params: Optional, tuple with the params passed to `fn`.
-    
-    Output:
-      Prints the test results.
-    
-    Returns:
-      Boolean `True` if the equality test passes. `False` otherwise.
-    """
-    if params is not None:
-        actual = fn(*params)
-    else:
-        actual = fn()
-    
-    result = test_equality(True, np.allclose(expected, actual), fn.__name__)
-    if not result:
-        print("Expected:", expected)
-        print("  Actual:", actual)
-    
-    return result
 
 def test_update_agent_pair():
     belief_ai = 0.7
