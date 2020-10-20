@@ -452,33 +452,7 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
     # If the update function is not defined
     return 0
 
-def run_simulation(belief_vec, inf_graph, max_time, num_bins, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
-    ## Initialize functions
-    ## TODO: Pass them as arguments. Done with Simlation Class.
-    pol_ER_discretized = make_pol_er_discretized_func(ALPHA, K, num_bins)
-
-    ## Creates temporary values to store evolution with time.
-    belief_vec_state = belief_vec
-    pol_state = pol_ER_discretized(belief_vec_state)
-
-    belief_history = [belief_vec_state]
-    pol_history = [pol_state]
-
-    ## Execites simulation for max_time steps.
-    for _ in range(1, max_time):
-        # Update beliefs
-        belief_vec_state = update_all(belief_vec_state, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold)
-        # Compute Esteban-Ray polarization.
-        pol_state = pol_ER_discretized(belief_vec_state)
-        # Appends the new polarization state to the log.
-        pol_history.append(pol_state)
-        belief_history.append(belief_vec_state)
-
-    return (np.array(pol_history), np.array(belief_history))
-
-import random
-
-def run_till_convergence(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, update_type=Update.CLASSIC, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
+def run_until_stable(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, update_type=Update.CLASSIC, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
     pol_ER_discretized = make_pol_er_discretized_func(ALPHA, K, num_bins)
 
     ## Creates temporary values to store evolution with time.
