@@ -36,7 +36,7 @@ Select `Simulations.ipynb`, and make sure to set it as trusted, or just re-run t
 
 You can run simulations creating an instance of the `Simulation` class and either its `run(max_time=100, smart_stop=True)` method or iterating it like any other python iterator. As always you need to provide the initial belief state, an influence graph, and the belief update function. Optionally you can define an alternative function for computing polarization, other than Esteban-Ray.
 
-By default, `Simulation` uses the `CLASSIC` (or rational) update function, but can be changed by passing an `update_fn` parameter. Also by default, the polarization measure is Esteban-Ray with 5 bins to discretize the belief state into a distribution, you can change the polarization measure by passing a `pol_measure` function, or just change the `num_bins` argument.
+By default, `Simulation` uses the `CLASSIC` (or regular) update function, but can be changed by passing an `update_fn` parameter. Also by default, the polarization measure is Esteban-Ray with 5 bins to discretize the belief state into a distribution, you can change the polarization measure by passing a `pol_measure` function, or just change the `num_bins` argument.
 
 ```python
 import polarization as plr
