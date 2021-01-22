@@ -89,7 +89,7 @@ To generate such configurations `build_belief` is provided.
 
 Apart from the `Simulation` class, the `polarization` module provides:
 
-- `run_till_convergence`: Runs a simulation until convergence is achieved, or `max_time`
+- `run_until_stable`: Runs a simulation until convergence is achieved, or `max_time`
  is reached (defaults to `100`), given an initial belief vector, influence graph,
  and update function (defaults to `CLASSIC`). It behaves like calling the `Simulation`'s `run()` method.
 
@@ -114,7 +114,7 @@ inf_graph = plr.build_influence(plr.Influence.CLIQUE, general_belief=0.5)
 
 # By default max_time is set to 100, and the update function to
 # Update.CLASSIC
-polarization_history, belief_history, pol = run_till_convergence(belief_vec, inf_graph, update_type=plr.Update.CLASSIC)
+polarization_history, belief_history, pol = run_until_stable(belief_vec, inf_graph, update_type=plr.Update.CLASSIC)
 ```
 
 ## Helper Functions
