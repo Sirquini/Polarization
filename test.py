@@ -481,10 +481,13 @@ if __name__ == "__main__":
     tests.extend(test_update_all())
     tests.extend(test_update_all_numpy())
 
+    success = all(tests)
     status = "\x1b[31mFAILED\x1b[0m"
-    if all(tests):
+    if success:
         status = "\x1b[32mok\x1b[0m"
     
     print()
     print("test result: {}. {} passed; {} failed".format(status, tests.count(True), tests.count(False)))
     print()
+    if not success:
+        exit(1)
