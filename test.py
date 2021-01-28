@@ -1,5 +1,6 @@
 import polarization
 import numpy as np
+import math
 
 from time import perf_counter 
 
@@ -24,9 +25,9 @@ def bench_test(test_fn):
         return values
     return timed_function
 
-def test_equality(expected, actual, name):
+def test_equality(expected, actual, name, tolerance=0.0):
     message = "test {} ...".format(name)
-    if expected != actual:
+    if (tolerance > 0.0 and not math.isclose(expected, actual, rel_tol=tolerance)) or (tolerance == 0.0 and expected != actual):
         print("{} \x1b[31mFAILED\x1b[0m".format(message))
         print("Expected:", expected)
         print("  Actual:", actual)
@@ -35,13 +36,14 @@ def test_equality(expected, actual, name):
         print("{} \x1b[32mok\x1b[0m".format(message))
         return True
 
-def test_function(fn, expected, params=None):
+def test_function(fn, expected, params=None, tolerance=0.0):
     """Tests the passed `fn` output against the `expected` result.
 
     Args:
       fn: The function to test.
       expected: The expected output from the function to succed the test.
       params: Optional, tuple with the params passed to `fn`.
+      tolerance: The relative tolerance - the maximum allowed difference.
     
     Output:
       Prints the test results.
@@ -54,7 +56,7 @@ def test_function(fn, expected, params=None):
     else:
         actual = fn()
     
-    return test_equality(expected, actual, fn.__name__)
+    return test_equality(expected, actual, fn.__name__, tolerance)
 
 def test_function_with_numpyall(fn, expected, params=None):
     """Tests the passed `fn` output against the `expected` result.
@@ -224,7 +226,7 @@ def test_pol_ER():
     distribution = np.array([[0.05, 0.15, 0.25, 0.35, 0.45 ,0.55, 0.65, 0.75, 0.85, 0.95], [0.27272727, 0.0, 0.0, 0.0 , 0.0, 0.45454545, 0.0, 0.0, 0.0, 0.27272727]])
     expected = 62.29879620526804
 
-    t1 = test_function(pol_ER, expected, (distribution,))
+    t1 = test_function(pol_ER, expected, (distribution,), 1e-10)
 
     return (t1,)
 
@@ -233,7 +235,7 @@ def test_pol_ER_discretized():
     beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
     expected = 62.298798448024755
 
-    t1 = test_function(pol_ER_discretized, expected, (beliefs,))
+    t1 = test_function(pol_ER_discretized, expected, (beliefs,), 1e-10)
 
     return (t1,)
 
