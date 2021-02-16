@@ -115,7 +115,7 @@ def build_belief(belief_type: Belief, num_agents=NUM_AGENTS, **kwargs):
     """
     if belief_type is Belief.MILD:
         middle = math.ceil(num_agents / 2)
-        return [0.8 * i / num_agents if i < middle else 0.2 + 0.8 * i / num_agents for i in range(num_agents)]
+        return [0.2 + 0.4 * i / num_agents if i < middle else 0.4 + 0.4 * i / num_agents for i in range(num_agents)]
     if belief_type is Belief.EXTREME:
         middle = math.ceil(num_agents / 2)
         return [0.4 * i / num_agents if i < middle else 0.6 + 0.4 * i / num_agents for i in range(num_agents)]
@@ -139,7 +139,7 @@ def build_uniform_beliefs(num_agents):
     """
     return [i/(num_agents - 1) for i in range(num_agents)]
 
-def build_mild_beliefs(num_agents, low_pole, high_pole, step):
+def build_old_mild_beliefs(num_agents, low_pole, high_pole, step):
     """Builds mildly polarized belief state, in which 
     half of agents has belief decreasing from 0.25, and
     half has belief increasing from 0.75, all by the given step.
@@ -147,14 +147,14 @@ def build_mild_beliefs(num_agents, low_pole, high_pole, step):
     middle = math.ceil(num_agents / 2)
     return [max(low_pole - step*(middle - i - 1), 0) if i < middle else min(high_pole - step*(middle - i), 1) for i in range(num_agents)]
 
-def build_extreme_beliefs(num_agents):
+def build_old_extreme_beliefs(num_agents):
     """Builds extreme polarized belief state, in which half
     of the agents has belief 0, and half has belief 1.
     """
     middle = math.ceil(num_agents / 2)
     return [0 if i < middle else 1 for i in range(num_agents)]
 
-def build_triple_beliefs(num_agents):
+def build_old_triple_beliefs(num_agents):
     """Builds three-pole belief state, in which each 
     one third of the agents has belief 0, one third has belief 0.4,
     and one third has belief 1.
@@ -191,11 +191,11 @@ def build_old_belief(
     if belief_type is Belief.UNIFORM:
         return build_uniform_beliefs(num_agents)
     if belief_type is Belief.MILD:
-        return build_mild_beliefs(num_agents, low_pole, high_pole, step)
+        return build_old_mild_beliefs(num_agents, low_pole, high_pole, step)
     if belief_type is Belief.EXTREME:
-        return build_extreme_beliefs(num_agents)
+        return build_old_extreme_beliefs(num_agents)
     if belief_type is Belief.TRIPLE:
-        return build_triple_beliefs(num_agents)
+        return build_old_triple_beliefs(num_agents)
     if belief_type is Belief.CONSENSUS:
         return build_consensus_beliefs(num_agents, consensus_value)
     raise Exception('belief_type not recognized. Expected a `Belief`')
@@ -289,7 +289,7 @@ def build_inf_graph_2_groups_faint(num_agents, weak_belief_value, strong_belief_
     inf_graph[:middle, :middle] = strong_belief_value
     inf_graph[middle:, middle:] = strong_belief_value
     return inf_graph
-  
+
 def build_inf_graph_2_influencers_balanced(num_agents, influencers_incoming_value, influencers_outgoing_value, others_belief_value):
     """Returns the influence graph for for "balanced 2-influencers" scenario."""
     inf_graph = np.full((num_agents, num_agents), others_belief_value)
@@ -331,7 +331,6 @@ class Influence(Enum):
     INFLUENCERS_2_BALANCED = 3
     INFLUENCERS_2_UNBALANCED = 4
     CIRCULAR = 5
-
 
 def build_influence(
         inf_type,
@@ -435,10 +434,10 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
         # Check if backfire is to be triggered
         if deltaij >= backfire_belief_threshold and influence >= backfire_influence_threshold:
             backfire_factor = deltaij / influence
-            
+
             # This transformation takes the step function from (-1, 1) to (0, 1)
             z = (2 * belief_ai) - 1
-            
+
             # Compute the backfire update
             new_belief = 1 / (1 + math.e ** (-2 * backfire_factor * z))
             if belief_ai <= 0.5:
@@ -447,7 +446,7 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
                 new_belief = max(belief_ai, new_belief)
         else:
             new_belief = belief_ai + influence * (belief_aj - belief_ai)
-        
+
         return new_belief
     # If the update function is not defined
     return 0
@@ -491,18 +490,18 @@ class Simulation:
             self.pol_measure = make_pol_er_discretized_func(ALPHA, K, num_bins)
         else:
             self.pol_measure = pol_measure
-    
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         result = (self.belief_vec, self.pol_measure(self.belief_vec))
         self.belief_vec = self.update_fn(self.belief_vec, self.inf_graph)
         return result
-    
+
     def run(self, max_time=100, smart_stop=True):
         """Runs the current Simulation setup.
-        
+
         For each time step, calculate the polarization value and the belief
         state. If `smart_stop` is `True`, the simulation stops when the
         belief state does not change from one time step to the next or if
@@ -512,7 +511,7 @@ class Simulation:
           - max_time (int, default 100): The time step to stop the simulation.
           - smart_stop (Boolean, default True): Stops the simulation if the
             belief state stabilizes or `max_time` is reached.
-        
+
         Returns:
           A tuple of NumPy Arrays with each polarization value, its
           corresponding  belief state, and the last polarization value.

@@ -79,7 +79,7 @@ There is a new function that allows us to generate new initial belief configurat
 | Belief      | [0, 0.2) | [0.2, 0.4) | [0.4, 0.6) | [0.6, 0.8) | [0.8, 1] |
 | ----------- | :------: | :--------: | :--------: | :--------: | :------: |
 | UNIFORM     | o | o | o | o | o |
-| MILD        | o | o |   | o | o |
+| MILD        |   | o |   | o |   |
 | EXTREME     | o |   |   |   | o |
 | TRIPLE      | o |   | o |   | o |
 
@@ -137,9 +137,9 @@ For creating the influence graph:
 For creating the legacy initial beliefs:
 
 - `build_uniform_beliefs(num_agents)`
-- `build_mild_beliefs(num_agents, low_pole, high_pole, step)`
-- `build_extreme_beliefs(num_agents)`
-- `build_triple_beliefs(num_agents)`
+- `build_old_mild_beliefs(num_agents, low_pole, high_pole, step)`
+- `build_old_extreme_beliefs(num_agents)`
+- `build_old_triple_beliefs(num_agents)`
 - `build_consensus_beliefs(num_agents, belief)`
 
 > It is recommended to just use the general `build_old_belief(belief_type, **kwargs)`.
