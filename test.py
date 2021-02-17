@@ -200,13 +200,13 @@ def test_build_beliefs():
 
     t6 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
 
-    num_agents = 11
-    expected = [0.0, 0.05, 0.1, 0.15000000000000002, 0.4, 0.45, 0.5, 0.55, 0.8, 0.8666666666666667, 0.9333333333333333]
+    num_agents = 9
+    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.8666666666666667, 0.9333333333333333]
 
     t7 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
 
-    num_agents = 9
-    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.8666666666666667, 0.9333333333333333]
+    num_agents = 11
+    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.44, 0.48000000000000004, 0.52, 0.56, 0.8, 0.8666666666666667, 0.9333333333333333]
 
     t8 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
 

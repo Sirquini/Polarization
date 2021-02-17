@@ -121,9 +121,9 @@ def build_belief(belief_type: Belief, num_agents=NUM_AGENTS, **kwargs):
         return [0.2 * i / middle if i < middle else 0.8 + 0.2 * (i - middle) / (num_agents - middle) for i in range(num_agents)]
     if belief_type is Belief.TRIPLE:
         beliefs = [0.0] * num_agents
-        last_third = num_agents // 3
-        middle_third = math.ceil(num_agents / 3)
-        first_third = num_agents - middle_third - last_third
+        first_third = num_agents // 3
+        middle_third = math.ceil(num_agents * 2 / 3) - first_third
+        last_third = num_agents - middle_third - first_third
         offset = 0
         for i, segment in enumerate((first_third, middle_third, last_third)):
             for j in range(segment):
