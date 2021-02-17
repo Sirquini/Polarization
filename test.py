@@ -177,17 +177,17 @@ def test_build_beliefs():
     t1 = test_function(polarization.build_belief, expected, (polarization.Belief.UNIFORM, num_agents))
 
     num_agents = 5
-    expected = [0.2, 0.28, 0.36, 0.6400000000000001, 0.72]
+    expected = [0.2, 0.26666666666666666, 0.33333333333333337, 0.6, 0.7]
 
     t2 = test_function(polarization.build_belief, expected, (polarization.Belief.MILD, num_agents))
 
     num_agents = 4
-    expected = [0.2, 0.30000000000000004, 0.6000000000000001, 0.7000000000000001]
+    expected = [0.2, 0.30000000000000004, 0.6, 0.7]
 
     t3 = test_function(polarization.build_belief, expected, (polarization.Belief.MILD, num_agents))
 
     num_agents = 5
-    expected = [0.0, 0.08, 0.16, 0.8400000000000001, 0.9199999999999999]
+    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.8, 0.9]
 
     t4 = test_function(polarization.build_belief, expected, (polarization.Belief.EXTREME, num_agents))
 

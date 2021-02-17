@@ -115,10 +115,10 @@ def build_belief(belief_type: Belief, num_agents=NUM_AGENTS, **kwargs):
     """
     if belief_type is Belief.MILD:
         middle = math.ceil(num_agents / 2)
-        return [0.2 + 0.4 * i / num_agents if i < middle else 0.4 + 0.4 * i / num_agents for i in range(num_agents)]
+        return [0.2 + 0.2 * i / middle if i < middle else 0.6 + 0.2 * (i - middle) / (num_agents - middle) for i in range(num_agents)]
     if belief_type is Belief.EXTREME:
         middle = math.ceil(num_agents / 2)
-        return [0.4 * i / num_agents if i < middle else 0.6 + 0.4 * i / num_agents for i in range(num_agents)]
+        return [0.2 * i / middle if i < middle else 0.8 + 0.2 * (i - middle) / (num_agents - middle) for i in range(num_agents)]
     if belief_type is Belief.TRIPLE:
         beliefs = [0.0] * num_agents
         last_third = num_agents // 3
