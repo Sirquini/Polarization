@@ -14,6 +14,7 @@ Provides functions for:
 
 import math
 from enum import Enum
+from functools import partial
 
 import numpy as np
 
@@ -204,67 +205,77 @@ def build_old_belief(
 ## The Esteban-Ray polarization measure implementation
 ######################################################
 
-def make_belief_2_dist_func(num_bins):
+def belief_2_dist(belief_vec, num_bins=NUM_BINS):
+    """Takes a belief state `belief_vec` and discretizes it into a fixed
+    number of bins.
+    """
+    # stores labels of bins
+    # the value of a bin is the medium point of that bin
+    bin_labels = [(i + 0.5)/num_bins for i in range(num_bins)]
+
+    # stores the distribution of labels
+    bin_prob = [0] * num_bins
+    # for all agents...
+    for belief in belief_vec:
+        # computes the bin into which the agent's belief falls
+        bin_ = math.floor(belief * num_bins)
+        # treats the extreme case in which belief is 1, putting the result in the right bin.
+        if bin_ == num_bins:
+            bin_ = num_bins - 1
+        # updates the frequency of that particular belief
+        bin_prob[bin_] += 1 / len(belief_vec)
+    # bundles into a matrix the bin_labels and bin_probabilities.
+    dist = np.array([bin_labels,bin_prob])
+    # returns the distribution.
+    return dist
+
+def make_belief_2_dist_func(num_bins=NUM_BINS):
     """Returns a function that discretizes a belief state into a `num_bins`
     number of bins.
     """
-    def belief_2_dist(belief_vec):
-        """Takes a belief state `belief_vec` and discretizes it into a fixed
-        number of bins.
-        """
-        # stores labels of bins
-        # the value of a bin is the medium point of that bin
-        bin_labels = [(i + 0.5)/num_bins for i in range(num_bins)]
+    _belief_2_dist = partial(belief_2_dist, num_bins=num_bins)
+    _belief_2_dist.__name__ = belief_2_dist.__name__
+    _belief_2_dist.__doc__ = belief_2_dist.__doc__
+    return _belief_2_dist
 
-        # stores the distribution of labels
-        bin_prob = [0] * num_bins
-        # for all agents...
-        for belief in belief_vec:
-            # computes the bin into which the agent's belief falls
-            bin_ = math.floor(belief * num_bins)
-            # treats the extreme case in which belief is 1, putting the result in the right bin.
-            if bin_ == num_bins:
-                bin_ = num_bins - 1
-            # updates the frequency of that particular belief
-            bin_prob[bin_] += 1 / len(belief_vec)
-        # bundles into a matrix the bin_labels and bin_probabilities.
-        dist = np.array([bin_labels,bin_prob])
-        # returns the distribution.
-        return dist
-    return belief_2_dist
+def pol_ER(dist, alpha=ALPHA, K=K):
+    """Computes the Esteban-Ray polarization of a distribution.
+    """
+    # recover bin labels
+    bin_labels = dist[0]
+    # recover bin probabilities
+    bin_prob = dist[1]
 
-def make_pol_er_func(alpha, K):
+    diff = np.ones((len(bin_labels), 1)) @ bin_labels[np.newaxis]
+    diff = np.abs(diff - np.transpose(diff))
+    pol = (bin_prob ** (1 + alpha)) @ diff @ bin_prob
+    # scales the measure by the constant K, and returns it.
+    return K * pol
+
+def make_pol_er_func(alpha=ALPHA, K=K):
     """Returns a function that computes the Esteban-Ray polarization of a
     distribution with set parameters `alpha` and `K`
     """
-    def pol_ER(dist):
-        """Computes the Esteban-Ray polarization of a distribution.
-        """
-        # recover bin labels
-        bin_labels = dist[0]
-        # recover bin probabilities
-        bin_prob = dist[1]
+    _pol_ER = partial(pol_ER, alpha=alpha, K=K)
+    _pol_ER.__name__ = pol_ER.__name__
+    _pol_ER.__doc__ = pol_ER.__doc__
+    return _pol_ER
 
-        diff = np.ones((len(bin_labels), 1)) @ bin_labels[np.newaxis]
-        diff = np.abs(diff - np.transpose(diff))
-        pol = (bin_prob ** (1 + alpha)) @ diff @ bin_prob
-        # scales the measure by the constant K, and returns it.
-        return K * pol
-    return pol_ER
+def pol_ER_discretized(belief_state, alpha=ALPHA, K=K, num_bins=NUM_BINS):
+    """Discretize belief state as necessary for computing Esteban-Ray
+    polarization and computes it.
+    """
+    return pol_ER(belief_2_dist(belief_state, num_bins), alpha, K)
 
-def make_pol_er_discretized_func(alpha, K, num_bins):
+def make_pol_er_discretized_func(alpha=ALPHA, K=K, num_bins=NUM_BINS):
     """Returns a function that computes the Esteban-Ray polarization of a
     belief state, discretized into a `num_bins` number of bins, with set
     parameters `alpha` and `K`.
     """
-    belief_2_dist = make_belief_2_dist_func(num_bins)
-    pol_ER = make_pol_er_func(ALPHA, K)
-    def pol_ER_discretized(belief_state):
-        """Discretize belief state as necessary for computing Esteban-Ray
-        polarization and computes it.
-        """
-        return pol_ER(belief_2_dist(belief_state))
-    return pol_ER_discretized
+    _pol_ER_discretized = partial(pol_ER_discretized, alpha=alpha, K=K, num_bins=num_bins)
+    _pol_ER_discretized.__name__ = pol_ER_discretized.__name__
+    _pol_ER_discretized.__doc__ = pol_ER_discretized.__doc__
+    return _pol_ER_discretized
 
 #####################################
 ## Influence graphs implementation
@@ -486,8 +497,9 @@ class Simulation:
         self.belief_vec = belief_vec
         self.inf_graph = inf_graph
         self.update_fn = update_fn
+        self.num_bins = num_bins
         if pol_measure is None:
-            self.pol_measure = make_pol_er_discretized_func(ALPHA, K, num_bins)
+            self.pol_measure = None
         else:
             self.pol_measure = pol_measure
 
@@ -495,7 +507,10 @@ class Simulation:
         return self
 
     def __next__(self):
-        result = (self.belief_vec, self.pol_measure(self.belief_vec))
+        if self.pol_measure is not None:
+            result = (self.belief_vec, self.pol_measure(self.belief_vec))
+        else:
+            result = (self.belief_vec, pol_ER_discretized(self.belief_vec, num_bins=self.num_bins))
         self.belief_vec = self.update_fn(self.belief_vec, self.inf_graph)
         return result
 
