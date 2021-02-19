@@ -344,7 +344,7 @@ class Influence(Enum):
     CIRCULAR = 5
 
 def build_influence(
-        inf_type,
+        inf_type: Influence,
         num_agents=NUM_AGENTS,
         *,
         weak_belief=GROUPS_FAINTLY_INF_VALUE_WEAK,
@@ -401,6 +401,44 @@ def build_influence(
 
 class Update(Enum):
     CLASSIC = 1
+    CONFBIAS = 2
+
+def neighbours_update(beliefs, inf_graph):
+    """Applies the classic update function.
+    
+    For each agent, update their beliefs factoring the authority bias and
+    the beliefs of all the agents' neighbors.
+    """
+    return [blf_ai + np.mean([inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0 or other == agent]) for agent, blf_ai in enumerate(beliefs)]
+
+def neighbours_cb_update(beliefs, inf_graph):
+    """Applies the confirmation-bias update function.
+    
+    For each agent, update their beliefs factoring the authority bias,
+    confirmation-bias and the beliefs of all the agents' neighbors.
+    """
+    return [blf_ai + np.mean([(1 - np.abs(blf_aj - blf_ai)) * inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0 or other == agent]) for agent, blf_ai in enumerate(beliefs)]
+
+def normalize_graph(inf_graph):
+    """Allows us to use apply the DeGroot Update function."""
+    num_agents = len(inf_graph)
+    result = inf_graph / num_agents
+    for agent in range(num_agents):
+        result[agent, agent] = 1 - sum(inf[agent] for pos, inf in enumerate(result) if pos != agent)
+    return result
+
+def degroot_update(beliefs, inf_graph):
+    """Applies the DeGroot Update function."""
+    infs = normalize_graph(inf_graph)
+    # TODO: replace with matrix multiplication
+    return [sum(blf * infs[other, agent] for other, blf in enumerate(beliefs)) for agent, _ in enumerate(beliefs)]
+
+######################################
+## Old Update Functions Implementation
+######################################
+
+class OldUpdate(Enum):
+    CLASSIC = 1
     CONFBIAS_SMOOTH = 2
     CONFBIAS_SHARP = 3
     BACKFIRE = 4
@@ -427,18 +465,18 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
     """Updates the belief value of one individual ai considering the effect one
     other individual aj on him.
     """
-    if update_type is Update.CLASSIC:
+    if update_type is OldUpdate.CLASSIC:
         return belief_ai + influence * (belief_aj - belief_ai)
-    elif update_type is Update.CONFBIAS_SMOOTH:
+    elif update_type is OldUpdate.CONFBIAS_SMOOTH:
         confbias_factor = 1 - np.abs(belief_aj - belief_ai)
         return belief_ai + confbias_factor * influence * (belief_aj - belief_ai)
-    elif update_type is Update.CONFBIAS_SHARP:
+    elif update_type is OldUpdate.CONFBIAS_SHARP:
         if (belief_aj - 0.5) * (belief_ai - 0.5) >= 0:
             confbias_factor = 1
         else:
             confbias_factor = confbias_discount
         return belief_ai + confbias_factor * influence * (belief_aj - belief_ai)
-    elif update_type is Update.BACKFIRE:
+    elif update_type is OldUpdate.BACKFIRE:
         # Compute the absolute difference in belief between agents
         deltaij = np.abs(belief_ai - belief_aj)
 
@@ -487,7 +525,17 @@ def run_until_stable(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, upd
 
     return (np.array(pol_history), np.array(belief_history), pol_history[-1])
 
-def make_update_fn(update_type, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
+def make_update_fn(update_type: Update):
+    if update_type is Update.CLASSIC:
+        return neighbours_update
+    if update_type is Update.CONFBIAS:
+        return neighbours_cb_update
+    if isinstance(update_type, Update):
+        raise NotImplementedError(f"Not implemented for {update_type}")
+    else:
+        raise TypeError(f"update_type must be an Update")
+
+def make_old_update_fn(update_type: OldUpdate, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
     def update_fn(belief_vec, inf_graph):
         return update_all(belief_vec, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_belief_threshold)
     return update_fn
@@ -498,19 +546,16 @@ class Simulation:
         self.inf_graph = inf_graph
         self.update_fn = update_fn
         self.num_bins = num_bins
-        if pol_measure is None:
-            self.pol_measure = None
-        else:
-            self.pol_measure = pol_measure
+        self.pol_measure = pol_measure
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.pol_measure is not None:
-            result = (self.belief_vec, self.pol_measure(self.belief_vec))
-        else:
+        if self.pol_measure is None:
             result = (self.belief_vec, pol_ER_discretized(self.belief_vec, num_bins=self.num_bins))
+        else:
+            result = (self.belief_vec, self.pol_measure(self.belief_vec))
         self.belief_vec = self.update_fn(self.belief_vec, self.inf_graph)
         return result
 

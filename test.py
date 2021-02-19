@@ -1,8 +1,9 @@
+from time import perf_counter
+import traceback
+
 import polarization
 import numpy as np
 import math
-
-from time import perf_counter 
 
 ###################
 # Basic Unit Tests
@@ -24,6 +25,25 @@ def bench_test(test_fn):
         print("time {} ... ({})".format(test_fn.__name__, counter))
         return values
     return timed_function
+
+def may_raise(test_fn):
+    """Calls `test_fn`, catches and reports Exceptions raised.
+
+    Args:
+      test_fn: The test function to watch.
+
+    Output:
+      Prints the traceback if an Exception is raised.
+    """
+    def tested_function(*args, **kwargs):
+        try:
+            values = test_fn(*args, **kwargs)
+        except Exception:
+            print("test {} ... \x1b[31mFAILED\x1b[0m raised an Exception".format(test_fn.__name__))
+            traceback.print_exc()
+            values = (False, )
+        return values
+    return tested_function
 
 def test_equality(expected, actual, name, tolerance=0.0):
     message = "test {} ...".format(name)
@@ -354,11 +374,12 @@ def test_build_inf_graph_circular():
 
     return (t1, t2, t3)
 
+@may_raise
 def test_update_agent_pair():
     belief_ai = 0.7
     belief_aj = 0.2
     influence = 0.2
-    update_type = polarization.Update.BACKFIRE
+    update_type = polarization.OldUpdate.BACKFIRE
     confbias_discount = 0.5
     backfire_belief_threshold = 0.4
     backfire_influence_threshold = 0.2
@@ -366,22 +387,23 @@ def test_update_agent_pair():
 
     t1 = test_function(polarization.update_agent_pair, 0.8807970779778823, params)
 
-    params[3] = polarization.Update.CLASSIC
+    params[3] = polarization.OldUpdate.CLASSIC
     t2 = test_function(polarization.update_agent_pair, 0.6, params)
 
-    params[3] = polarization.Update.CONFBIAS_SHARP
+    params[3] = polarization.OldUpdate.CONFBIAS_SHARP
     t3 = test_function(polarization.update_agent_pair, 0.6499999999999999, params)
 
-    params[3] = polarization.Update.CONFBIAS_SMOOTH
+    params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
     t4 = test_function(polarization.update_agent_pair, 0.6499999999999999, params)
 
     return (t1, t2, t3, t4)
 
+@may_raise
 def test_update_agent_vs_all():
     agent = 3
     beliefs = [0.1, 0.2, 0.3, 0.7]
     influence = np.full((4,4),0.2)
-    update_type = polarization.Update.BACKFIRE
+    update_type = polarization.OldUpdate.BACKFIRE
     confbias_discount = 0.5
     backfire_belief_threshold = 0.4
     backfire_influence_threshold = 0.2
@@ -389,22 +411,23 @@ def test_update_agent_vs_all():
 
     t1 = test_function(polarization.update_agent_vs_all, 0.77940609537099, params)
 
-    params[3] = polarization.Update.CLASSIC
+    params[3] = polarization.OldUpdate.CLASSIC
     t2 = test_function(polarization.update_agent_vs_all, 0.625, params)
 
-    params[3] = polarization.Update.CONFBIAS_SHARP
+    params[3] = polarization.OldUpdate.CONFBIAS_SHARP
     t3 = test_function(polarization.update_agent_vs_all, 0.6624999999999999, params)
 
-    params[3] = polarization.Update.CONFBIAS_SMOOTH
+    params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
     t4 = test_function(polarization.update_agent_vs_all, 0.6635, params)
 
     return (t1, t2, t3, t4)
 
+@may_raise
 @bench_test
 def test_update_all():
     beliefs = [0.1, 0.2, 0.3, 0.7]
     influence = np.full((4,4),0.2)
-    update_type = polarization.Update.BACKFIRE
+    update_type = polarization.OldUpdate.BACKFIRE
     confbias_discount = 0.5
     backfire_belief_threshold = 0.4
     backfire_influence_threshold = 0.2
@@ -414,24 +437,25 @@ def test_update_all():
     t1 = test_function(polarization.update_all, expected, params)
 
     expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
-    params[2] = polarization.Update.CLASSIC
+    params[2] = polarization.OldUpdate.CLASSIC
     t2 = test_function(polarization.update_all, expected, params)
 
     expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
-    params[2] = polarization.Update.CONFBIAS_SHARP
+    params[2] = polarization.OldUpdate.CONFBIAS_SHARP
     t3 = test_function(polarization.update_all, expected, params)
 
     expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
-    params[2] = polarization.Update.CONFBIAS_SMOOTH
+    params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
     t4 = test_function(polarization.update_all, expected, params)
 
     return (t1, t2, t3, t4)
 
+@may_raise
 @bench_test
 def test_update_all_numpy():
     beliefs = [0.1, 0.2, 0.3, 0.7]
     influence = np.full((4,4),0.2)
-    update_type = polarization.Update.BACKFIRE
+    update_type = polarization.OldUpdate.BACKFIRE
     confbias_discount = 0.5
     backfire_belief_threshold = 0.4
     backfire_influence_threshold = 0.2
@@ -441,15 +465,15 @@ def test_update_all_numpy():
     t1 = test_function(polarization.update_all_np, expected, params)
 
     expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
-    params[2] = polarization.Update.CLASSIC
+    params[2] = polarization.OldUpdate.CLASSIC
     t2 = test_function(polarization.update_all_np, expected, params)
 
     expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
-    params[2] = polarization.Update.CONFBIAS_SHARP
+    params[2] = polarization.OldUpdate.CONFBIAS_SHARP
     t3 = test_function(polarization.update_all_np, expected, params)
 
     expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
-    params[2] = polarization.Update.CONFBIAS_SMOOTH
+    params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
     t4 = test_function(polarization.update_all_np, expected, params)
 
     return (t1, t2, t3, t4)
