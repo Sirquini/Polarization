@@ -247,7 +247,33 @@ class TestBuildInfluence(unittest.TestCase):
         np.testing.assert_equal(polarization.build_inf_graph_circular(num_agents, i), expected)
 
 class TestUpdateFunctions(unittest.TestCase):
-    def test_update_agent_pair(self):
+    def setUp(self):
+        self.beliefs = [0.1, 0.2, 0.3, 0.7]
+        self.inf_graph = np.full((4,4),0.2)
+        self.expected = {
+            polarization.Update.CLASSIC: [0.14500000000000002, 0.225, 0.305, 0.625],
+            polarization.Update.CONFBIAS: [0.1245, 0.21250000000000002, 0.2995, 0.6635],
+        }
+
+    def test_neigbours_update(self):
+        update_type = polarization.Update.CLASSIC
+        self.assertEqual(polarization.neighbours_update(self.beliefs, self.inf_graph), self.expected[update_type])
+
+    def test_neigbours_cb_update(self):
+        update_type = polarization.Update.CONFBIAS
+        self.assertEqual(polarization.neighbours_cb_update(self.beliefs, self.inf_graph), self.expected[update_type])
+
+    def test_make_update_fn(self):
+        update_type = polarization.Update.CLASSIC
+        fn = polarization.make_update_fn(update_type)
+        self.assertEqual(fn(self.beliefs, self.inf_graph), self.expected[update_type])
+
+        update_type = polarization.Update.CONFBIAS
+        fn = polarization.make_update_fn(update_type)
+        self.assertEqual(fn(self.beliefs, self.inf_graph), self.expected[update_type])
+
+class TestOldUpdateFunctions(unittest.TestCase):
+    def setUp(self):
         belief_ai = 0.7
         belief_aj = 0.2
         influence = 0.2
@@ -255,87 +281,70 @@ class TestUpdateFunctions(unittest.TestCase):
         confbias_discount = 0.5
         backfire_belief_threshold = 0.4
         backfire_influence_threshold = 0.2
-        params = [belief_ai, belief_aj, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
 
-        self.assertEqual(polarization.update_agent_pair(*params), 0.8807970779778823)
-
-        params[3] = polarization.OldUpdate.CLASSIC
-        self.assertEqual(polarization.update_agent_pair(*params), 0.6)
-
-        params[3] = polarization.OldUpdate.CONFBIAS_SHARP
-        self.assertEqual(polarization.update_agent_pair(*params), 0.6499999999999999)
-
-        params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
-        self.assertEqual(polarization.update_agent_pair(*params), 0.6499999999999999)
-
-    def test_update_agent_vs_all(self):
         agent = 3
         beliefs = [0.1, 0.2, 0.3, 0.7]
-        influence = np.full((4,4),0.2)
-        update_type = polarization.OldUpdate.BACKFIRE
-        confbias_discount = 0.5
-        backfire_belief_threshold = 0.4
-        backfire_influence_threshold = 0.2
-        params = [beliefs, influence, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+        inf_graph = np.full((4,4),0.2)
 
-        self.assertEqual(polarization.update_agent_vs_all(*params), 0.77940609537099)
+        self.params1 = [belief_ai, belief_aj, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+        self.params2 = [beliefs, inf_graph, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+        self.params3 = [beliefs, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
 
-        params[3] = polarization.OldUpdate.CLASSIC
-        self.assertEqual(polarization.update_agent_vs_all(*params), 0.625)
+    def test_update_agent_pair(self):
+        self.assertEqual(polarization.update_agent_pair(*self.params1), 0.8807970779778823)
 
-        params[3] = polarization.OldUpdate.CONFBIAS_SHARP
-        self.assertEqual(polarization.update_agent_vs_all(*params), 0.6624999999999999)
+        self.params1[3] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_agent_pair(*self.params1), 0.6)
 
-        params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
-        self.assertEqual(polarization.update_agent_vs_all(*params), 0.6635)
+        self.params1[3] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_agent_pair(*self.params1), 0.6499999999999999)
+
+        self.params1[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_agent_pair(*self.params1), 0.6499999999999999)
+
+    def test_update_agent_vs_all(self):
+        self.assertEqual(polarization.update_agent_vs_all(*self.params2), 0.77940609537099)
+
+        self.params2[3] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_agent_vs_all(*self.params2), 0.625)
+
+        self.params2[3] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_agent_vs_all(*self.params2), 0.6624999999999999)
+
+        self.params2[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_agent_vs_all(*self.params2), 0.6635)
 
     def test_update_all(self):
-        beliefs = [0.1, 0.2, 0.3, 0.7]
-        influence = np.full((4,4),0.2)
-        update_type = polarization.OldUpdate.BACKFIRE
-        confbias_discount = 0.5
-        backfire_belief_threshold = 0.4
-        backfire_influence_threshold = 0.2
-        params = [beliefs, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
         expected = [0.09204064278828998, 0.1618564682943917, 0.30500000000000005, 0.77940609537099]
-
-        self.assertEqual(polarization.update_all(*params), expected)
+        self.assertEqual(polarization.update_all(*self.params3), expected)
 
         expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
-        params[2] = polarization.OldUpdate.CLASSIC
-        self.assertEqual(polarization.update_all(*params), expected)
+        self.params3[2] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_all(*self.params3), expected)
 
         expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
-        params[2] = polarization.OldUpdate.CONFBIAS_SHARP
-        self.assertEqual(polarization.update_all(*params), expected)
+        self.params3[2] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_all(*self.params3), expected)
 
         expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
-        params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
-        self.assertEqual(polarization.update_all(*params), expected)
+        self.params3[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_all(*self.params3), expected)
 
     def test_update_all_numpy(self):
-        beliefs = [0.1, 0.2, 0.3, 0.7]
-        influence = np.full((4,4),0.2)
-        update_type = polarization.OldUpdate.BACKFIRE
-        confbias_discount = 0.5
-        backfire_belief_threshold = 0.4
-        backfire_influence_threshold = 0.2
-        params = [beliefs, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
         expected = [0.09204064278828998, 0.1618564682943917, 0.30500000000000005, 0.77940609537099]
-
-        self.assertEqual(polarization.update_all_np(*params), expected)
+        self.assertEqual(polarization.update_all_np(*self.params3), expected)
 
         expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
-        params[2] = polarization.OldUpdate.CLASSIC
-        self.assertEqual(polarization.update_all_np(*params), expected)
+        self.params3[2] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_all_np(*self.params3), expected)
 
         expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
-        params[2] = polarization.OldUpdate.CONFBIAS_SHARP
-        self.assertEqual(polarization.update_all_np(*params), expected)
+        self.params3[2] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_all_np(*self.params3), expected)
 
         expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
-        params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
-        self.assertEqual(polarization.update_all_np(*params), expected)
+        self.params3[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_all_np(*self.params3), expected)
 
 if __name__ == "__main__":
     unittest.main()
