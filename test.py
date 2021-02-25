@@ -1,5 +1,6 @@
 from time import perf_counter
 import traceback
+import unittest
 
 import polarization
 import numpy as np
@@ -26,494 +27,315 @@ def bench_test(test_fn):
         return values
     return timed_function
 
-def may_raise(test_fn):
-    """Calls `test_fn`, catches and reports Exceptions raised.
-
-    Args:
-      test_fn: The test function to watch.
-
-    Output:
-      Prints the traceback if an Exception is raised.
-    """
-    def tested_function(*args, **kwargs):
-        try:
-            values = test_fn(*args, **kwargs)
-        except Exception:
-            print("test {} ... \x1b[31mFAILED\x1b[0m raised an Exception".format(test_fn.__name__))
-            traceback.print_exc()
-            values = (False, )
-        return values
-    return tested_function
-
-def test_equality(expected, actual, name, tolerance=0.0):
-    message = "test {} ...".format(name)
-    if (tolerance > 0.0 and not math.isclose(expected, actual, rel_tol=tolerance)) or (tolerance == 0.0 and expected != actual):
-        print("{} \x1b[31mFAILED\x1b[0m".format(message))
-        print("Expected:", expected)
-        print("  Actual:", actual)
-        return False
-    else:
-        print("{} \x1b[32mok\x1b[0m".format(message))
-        return True
-
-def test_function(fn, expected, params=None, tolerance=0.0):
-    """Tests the passed `fn` output against the `expected` result.
-
-    Args:
-      fn: The function to test.
-      expected: The expected output from the function to succed the test.
-      params: Optional, tuple with the params passed to `fn`.
-      tolerance: The relative tolerance - the maximum allowed difference.
-
-    Output:
-      Prints the test results.
-
-    Returns:
-      Boolean `True` if the equality test passes. `False` otherwise.
-    """
-    if params is not None:
-        actual = fn(*params)
-    else:
-        actual = fn()
-
-    return test_equality(expected, actual, fn.__name__, tolerance)
-
-def test_function_with_numpyall(fn, expected, params=None):
-    """Tests the passed `fn` output against the `expected` result.
-
-    Args:
-      fn: The function to test.
-      expected: The expected output from the function to succed the test.
-      params: Optional, tuple with the params passed to `fn`.
-
-    Output:
-      Prints the test results.
+class TestBuildBeliefs(unittest.TestCase):
+    def test_build_uniform_beliefs(self):
+        num_agents = 5
+        expected = [0.0, 0.25, 0.5, 0.75, 1.0]
 
-    Returns:
-      Boolean `True` if the equality test passes. `False` otherwise.
-    """
-    if params is not None:
-        actual = fn(*params)
-    else:
-        actual = fn()
+        self.assertEqual(polarization.build_uniform_beliefs(num_agents), expected)
 
-    result = test_equality(True, (expected == actual).all(), fn.__name__)
-    if not result:
-        print("Expected:", expected)
-        print("  Actual:", actual)
+    def test_build_consensus_beliefs(self):
+        num_agents = 5
+        belief = 0.7
+        expected = [belief] * num_agents
 
-    return result
+        self.assertEqual(polarization.build_consensus_beliefs(num_agents, belief), expected)
 
-def test_function_with_numpyallclose(fn, expected, params=None):
-    """Test the passed `fn` output against the `expected` result.
+    def test_build_old_mild_beliefs(self):
+        num_agents = 5
+        expected = [0.19999999999999998, 0.25, 0.3, 0.7, 0.75]
 
-    Args:
-      fn: The function to test.
-      expected: The expected output from the function to succed the test.
-      params: Optional, tuple with the params passed to `fn`.
+        self.assertEqual(polarization.build_old_mild_beliefs(num_agents, 0.3, 0.7, 0.05), expected)
 
-    Output:
-      Prints the test results.
+        num_agents = 4
+        expected = [0.25, 0.3, 0.7, 0.75]
 
-    Returns:
-      Boolean `True` if the equality test passes. `False` otherwise.
-    """
-    if params is not None:
-        actual = fn(*params)
-    else:
-        actual = fn()
+        self.assertEqual(polarization.build_old_mild_beliefs(num_agents, 0.3, 0.7, 0.05), expected)
 
-    result = test_equality(True, np.allclose(expected, actual), fn.__name__)
-    if not result:
-        print("Expected:", expected)
-        print("  Actual:", actual)
+    def test_build_old_extreme_beliefs(self):
+        num_agents = 5
+        expected = [0, 0, 0, 1, 1]
 
-    return result
+        self.assertEqual(polarization.build_old_extreme_beliefs(num_agents), expected)
 
-def test_build_uniform_beliefs():
-    num_agents = 5
-    expected = [0.0, 0.25, 0.5, 0.75, 1.0]
+        num_agents = 4
+        expected = [0, 0, 1, 1]
 
-    t1 = test_function(polarization.build_uniform_beliefs, expected, (num_agents,))
+        self.assertEqual(polarization.build_old_extreme_beliefs(num_agents), expected)
 
-    return (t1,)
+    def test_build_old_triple_beliefs(self):
+        num_agents = 7
+        expected = [0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0]
 
-def test_build_old_mild_beliefs():
-    num_agents = 5
-    expected = [0.19999999999999998, 0.25, 0.3, 0.7, 0.75]
+        self.assertEqual(polarization.build_old_triple_beliefs(num_agents), expected)
 
-    t1 = test_function(polarization.build_old_mild_beliefs, expected, (num_agents, 0.3, 0.7, 0.05))
+        num_agents = 11
+        expected = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
 
-    num_agents = 4
-    expected = [0.25, 0.3, 0.7, 0.75]
+        self.assertEqual(polarization.build_old_triple_beliefs(num_agents), expected)
 
-    t2 = test_function(polarization.build_old_mild_beliefs, expected, (num_agents, 0.3, 0.7, 0.05))
+        num_agents = 9
+        expected = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
 
-    return (t1, t2)
+        self.assertEqual(polarization.build_old_triple_beliefs(num_agents), expected)
 
-def test_build_old_extreme_beliefs():
-    num_agents = 5
-    expected = [0, 0, 0, 1, 1]
+    def test_build_beliefs(self):
+        num_agents = 5
+        expected = [0.0, 0.25, 0.5, 0.75, 1.0]
 
-    t1 = test_function(polarization.build_old_extreme_beliefs, expected, (num_agents,))
+        self.assertEqual(polarization.build_belief(polarization.Belief.UNIFORM, num_agents), expected)
 
-    num_agents = 4
-    expected = [0, 0, 1, 1]
-    t2 = test_function(polarization.build_old_extreme_beliefs, expected, (num_agents,))
+        num_agents = 5
+        expected = [0.2, 0.26666666666666666, 0.33333333333333337, 0.6, 0.7]
 
-    return (t1, t2)
-    
-def test_build_old_triple_beliefs():
-    num_agents = 7
-    expected = [0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0]
+        self.assertEqual(polarization.build_belief(polarization.Belief.MILD, num_agents), expected)
 
-    t1 = test_function(polarization.build_old_triple_beliefs, expected, (num_agents,))
+        num_agents = 4
+        expected = [0.2, 0.30000000000000004, 0.6, 0.7]
 
-    num_agents = 11
-    expected = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
+        self.assertEqual(polarization.build_belief(polarization.Belief.MILD, num_agents), expected)
 
-    t2 = test_function(polarization.build_old_triple_beliefs, expected, (num_agents,))
+        num_agents = 5
+        expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.8, 0.9]
 
-    num_agents = 9
-    expected = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
+        self.assertEqual(polarization.build_belief(polarization.Belief.EXTREME, num_agents), expected)
 
-    t3 = test_function(polarization.build_old_triple_beliefs, expected, (num_agents,))
+        num_agents = 4
+        expected = [0.0, 0.1, 0.8, 0.9]
 
-    return (t1, t2, t3)
+        self.assertEqual(polarization.build_belief(polarization.Belief.EXTREME, num_agents), expected)
 
-def test_build_consensus_beliefs():
-    num_agents = 5
-    belief = 0.7
-    expected = [belief] * num_agents
+        num_agents = 7
+        expected = [0.0, 0.1, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.9]
 
-    t1 = test_function(polarization.build_consensus_beliefs, expected, (num_agents, belief))
+        self.assertEqual(polarization.build_belief(polarization.Belief.TRIPLE, num_agents), expected)
 
-    return (t1,)
+        num_agents = 9
+        expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.8666666666666667, 0.9333333333333333]
 
-def test_build_beliefs():
-    num_agents = 5
-    expected = [0.0, 0.25, 0.5, 0.75, 1.0]
+        self.assertEqual(polarization.build_belief(polarization.Belief.TRIPLE, num_agents), expected)
 
-    t1 = test_function(polarization.build_belief, expected, (polarization.Belief.UNIFORM, num_agents))
+        num_agents = 11
+        expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.44, 0.48000000000000004, 0.52, 0.56, 0.8, 0.8666666666666667, 0.9333333333333333]
 
-    num_agents = 5
-    expected = [0.2, 0.26666666666666666, 0.33333333333333337, 0.6, 0.7]
+        self.assertEqual(polarization.build_belief(polarization.Belief.TRIPLE, num_agents), expected)
 
-    t2 = test_function(polarization.build_belief, expected, (polarization.Belief.MILD, num_agents))
+class TestPolarizationMeasure(unittest.TestCase):
+    def test_belief_2_distribution(self):
+        belief_2_distribution = polarization.make_belief_2_dist_func(10)
+        beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
+        expected = np.array([[0.05, 0.15, 0.25, 0.35, 0.45 ,0.55, 0.65, 0.75, 0.85, 0.95], [0.27272727, 0.0, 0.0, 0.0 , 0.0, 0.45454545, 0.0, 0.0, 0.0, 0.27272727]])
 
-    num_agents = 4
-    expected = [0.2, 0.30000000000000004, 0.6, 0.7]
+        np.testing.assert_allclose(belief_2_distribution(beliefs), expected)
 
-    t3 = test_function(polarization.build_belief, expected, (polarization.Belief.MILD, num_agents))
-
-    num_agents = 5
-    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.8, 0.9]
-
-    t4 = test_function(polarization.build_belief, expected, (polarization.Belief.EXTREME, num_agents))
-
-    num_agents = 4
-    expected = [0.0, 0.1, 0.8, 0.9]
-    t5 = test_function(polarization.build_belief, expected, (polarization.Belief.EXTREME, num_agents))
-
-    num_agents = 7
-    expected = [0.0, 0.1, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.9]
-
-    t6 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
-
-    num_agents = 9
-    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.4666666666666667, 0.5333333333333333, 0.8, 0.8666666666666667, 0.9333333333333333]
-
-    t7 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
-
-    num_agents = 11
-    expected = [0.0, 0.06666666666666667, 0.13333333333333333, 0.4, 0.44, 0.48000000000000004, 0.52, 0.56, 0.8, 0.8666666666666667, 0.9333333333333333]
-
-    t8 = test_function(polarization.build_belief, expected, (polarization.Belief.TRIPLE, num_agents))
-
-    return (t1, t2, t3, t4, t5, t6, t7, t8)
-
-def test_belief_2_distribution():
-    belief_2_distribution = polarization.make_belief_2_dist_func(10)
-    beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
-    expected = np.array([[0.05, 0.15, 0.25, 0.35, 0.45 ,0.55, 0.65, 0.75, 0.85, 0.95], [0.27272727, 0.0, 0.0, 0.0 , 0.0, 0.45454545, 0.0, 0.0, 0.0, 0.27272727]])
-
-    t1 = test_function_with_numpyallclose(belief_2_distribution, expected, (beliefs,))
-
-    return (t1,)
-
-def test_pol_ER():
-    pol_ER = polarization.make_pol_er_func(1.6, 1000)
-    distribution = np.array([[0.05, 0.15, 0.25, 0.35, 0.45 ,0.55, 0.65, 0.75, 0.85, 0.95], [0.27272727, 0.0, 0.0, 0.0 , 0.0, 0.45454545, 0.0, 0.0, 0.0, 0.27272727]])
-    expected = 62.29879620526804
-
-    t1 = test_function(pol_ER, expected, (distribution,), 1e-10)
-
-    return (t1,)
-
-def test_pol_ER_discretized():
-    pol_ER_discretized = polarization.make_pol_er_discretized_func(1.6, 1000, 10)
-    beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
-    expected = 62.298798448024755
-
-    t1 = test_function(pol_ER_discretized, expected, (beliefs,), 1e-10)
-
-    return (t1,)
-
-def test_build_inf_graph_clique():
-    num_agents = 5
-    belief = 0.7
-    expected = [[0.7, 0.7, 0.7, 0.7, 0.7],
-       [0.7, 0.7, 0.7, 0.7, 0.7],
-       [0.7, 0.7, 0.7, 0.7, 0.7],
-       [0.7, 0.7, 0.7, 0.7, 0.7],
-       [0.7, 0.7, 0.7, 0.7, 0.7]]
-
-    t1 = test_function_with_numpyall(polarization.build_inf_graph_clique, expected, (num_agents, belief))
-
-    return (t1,)
-
-def test_build_inf_graph_2_groups_disconnected():
-    num_agents = 5
-    expected = [[0.3, 0.3, 0.3, 0.0, 0.0],
-       [0.3, 0.3, 0.3, 0.0, 0.0],
-       [0.3, 0.3, 0.3, 0.0, 0.0],
-       [0.0, 0.0, 0.0, 0.3, 0.3],
-       [0.0, 0.0, 0.0, 0.3, 0.3]]
-    t1 = test_function_with_numpyall(polarization.build_inf_graph_2_groups_disconnected, expected, (num_agents, 0.3))
-
-    num_agents = 4
-    expected = [[0.3, 0.3, 0.0, 0.0],
-       [0.3, 0.3, 0.0, 0.0],
-       [0.0, 0.0, 0.3, 0.3],
-       [0.0, 0.0, 0.3, 0.3]]
-    t2 = test_function_with_numpyall(polarization.build_inf_graph_2_groups_disconnected, expected, (num_agents, 0.3))
-
-    return (t1, t2)
-
-def test_build_inf_graph_2_groups_faint():
-    num_agents = 5
-    expected = [[0.3, 0.3, 0.3, 0.1, 0.1],
-       [0.3, 0.3, 0.3, 0.1, 0.1],
-       [0.3, 0.3, 0.3, 0.1, 0.1],
-       [0.1, 0.1, 0.1, 0.3, 0.3],
-       [0.1, 0.1, 0.1, 0.3, 0.3]]
-
-    t1 = test_function_with_numpyall(polarization.build_inf_graph_2_groups_faint, expected, (num_agents, 0.1, 0.3))
-
-    num_agents = 4
-    expected = [[0.3, 0.3, 0.1, 0.1],
-       [0.3, 0.3, 0.1, 0.1],
-       [0.1, 0.1, 0.3, 0.3],
-       [0.1, 0.1, 0.3, 0.3]]
-
-    t2 = test_function_with_numpyall(polarization.build_inf_graph_2_groups_faint, expected, (num_agents, 0.1, 0.3))
-
-    return (t1, t2)
-
-def test_build_inf_graph_2_influencers_balanced():
-    num_agents = 5
-    expected = [[0.7, 0.7, 0.7, 0.7, 0.1],
-       [0.1, 0.2, 0.2, 0.2, 0.1],
-       [0.1, 0.2, 0.2, 0.2, 0.1],
-       [0.1, 0.2, 0.2, 0.2, 0.1],
-       [0.1, 0.7, 0.7, 0.7, 0.7]]
-
-    t1 = test_function_with_numpyall(polarization.build_inf_graph_2_influencers_balanced, expected, (num_agents, 0.1, 0.7, 0.2))
-
-    num_agents = 4
-    expected = [[0.7, 0.7, 0.7, 0.1],
-       [0.1, 0.2, 0.2, 0.1],
-       [0.1, 0.2, 0.2, 0.1],
-       [0.1, 0.7, 0.7, 0.7]]
-
-    t2 = test_function_with_numpyall(polarization.build_inf_graph_2_influencers_balanced, expected, (num_agents, 0.1, 0.7, 0.2))
-
-    return (t1, t2)
-
-def test_build_inf_graph_2_influencers_unbalanced():
-    num_agents = 5
-    expected = [[0.5, 0.5, 0.5, 0.5, 0.1],
-       [0.3, 0.2, 0.2, 0.2, 0.1],
-       [0.3, 0.2, 0.2, 0.2, 0.1],
-       [0.3, 0.2, 0.2, 0.2, 0.1],
-       [0.3, 0.4, 0.4, 0.4, 0.4]]
-
-    t1 = test_function_with_numpyall(polarization.build_inf_graph_2_influencers_unbalanced, expected, (num_agents, 0.5, 0.4, 0.3, 0.1, 0.2))
-
-    num_agents = 4
-    expected = [[0.5, 0.5, 0.5, 0.1],
-       [0.3, 0.2, 0.2, 0.1],
-       [0.3, 0.2, 0.2, 0.1],
-       [0.3, 0.4, 0.4, 0.4]]
-
-    t2 = test_function_with_numpyall(polarization.build_inf_graph_2_influencers_unbalanced, expected, (num_agents, 0.5, 0.4, 0.3, 0.1, 0.2))
-
-    return (t1, t2)
-
-def test_build_inf_graph_circular():
-    num_agents = 6
-    i = 0.6
-    expected = [[0, i, 0, 0, 0, 0],
-       [0, 0, i, 0, 0, 0],
-       [0, 0, 0, i, 0, 0],
-       [0, 0, 0, 0, i, 0],
-       [0, 0, 0, 0, 0, i],
-       [i, 0, 0, 0, 0, 0]]
-
-    t1 = test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
-
-    num_agents = 2
-    expected = [[0, i], [i, 0]]
-
-    t2 = test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
-
-    num_agents = 1
-    expected = [[i]]
-
-    t3 = test_function_with_numpyall(polarization.build_inf_graph_circular, expected, (num_agents, i))
-
-    return (t1, t2, t3)
-
-@may_raise
-def test_update_agent_pair():
-    belief_ai = 0.7
-    belief_aj = 0.2
-    influence = 0.2
-    update_type = polarization.OldUpdate.BACKFIRE
-    confbias_discount = 0.5
-    backfire_belief_threshold = 0.4
-    backfire_influence_threshold = 0.2
-    params = [belief_ai, belief_aj, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
-
-    t1 = test_function(polarization.update_agent_pair, 0.8807970779778823, params)
-
-    params[3] = polarization.OldUpdate.CLASSIC
-    t2 = test_function(polarization.update_agent_pair, 0.6, params)
-
-    params[3] = polarization.OldUpdate.CONFBIAS_SHARP
-    t3 = test_function(polarization.update_agent_pair, 0.6499999999999999, params)
-
-    params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
-    t4 = test_function(polarization.update_agent_pair, 0.6499999999999999, params)
-
-    return (t1, t2, t3, t4)
-
-@may_raise
-def test_update_agent_vs_all():
-    agent = 3
-    beliefs = [0.1, 0.2, 0.3, 0.7]
-    influence = np.full((4,4),0.2)
-    update_type = polarization.OldUpdate.BACKFIRE
-    confbias_discount = 0.5
-    backfire_belief_threshold = 0.4
-    backfire_influence_threshold = 0.2
-    params = [beliefs, influence, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
-
-    t1 = test_function(polarization.update_agent_vs_all, 0.77940609537099, params)
-
-    params[3] = polarization.OldUpdate.CLASSIC
-    t2 = test_function(polarization.update_agent_vs_all, 0.625, params)
-
-    params[3] = polarization.OldUpdate.CONFBIAS_SHARP
-    t3 = test_function(polarization.update_agent_vs_all, 0.6624999999999999, params)
-
-    params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
-    t4 = test_function(polarization.update_agent_vs_all, 0.6635, params)
-
-    return (t1, t2, t3, t4)
-
-@may_raise
-@bench_test
-def test_update_all():
-    beliefs = [0.1, 0.2, 0.3, 0.7]
-    influence = np.full((4,4),0.2)
-    update_type = polarization.OldUpdate.BACKFIRE
-    confbias_discount = 0.5
-    backfire_belief_threshold = 0.4
-    backfire_influence_threshold = 0.2
-    params = [beliefs, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
-    expected = [0.09204064278828998, 0.1618564682943917, 0.30500000000000005, 0.77940609537099]
-
-    t1 = test_function(polarization.update_all, expected, params)
-
-    expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
-    params[2] = polarization.OldUpdate.CLASSIC
-    t2 = test_function(polarization.update_all, expected, params)
-
-    expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
-    params[2] = polarization.OldUpdate.CONFBIAS_SHARP
-    t3 = test_function(polarization.update_all, expected, params)
-
-    expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
-    params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
-    t4 = test_function(polarization.update_all, expected, params)
-
-    return (t1, t2, t3, t4)
-
-@may_raise
-@bench_test
-def test_update_all_numpy():
-    beliefs = [0.1, 0.2, 0.3, 0.7]
-    influence = np.full((4,4),0.2)
-    update_type = polarization.OldUpdate.BACKFIRE
-    confbias_discount = 0.5
-    backfire_belief_threshold = 0.4
-    backfire_influence_threshold = 0.2
-    params = [beliefs, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
-    expected = [0.09204064278828998, 0.1618564682943917, 0.30500000000000005, 0.77940609537099]
-
-    t1 = test_function(polarization.update_all_np, expected, params)
-
-    expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
-    params[2] = polarization.OldUpdate.CLASSIC
-    t2 = test_function(polarization.update_all_np, expected, params)
-
-    expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
-    params[2] = polarization.OldUpdate.CONFBIAS_SHARP
-    t3 = test_function(polarization.update_all_np, expected, params)
-
-    expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
-    params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
-    t4 = test_function(polarization.update_all_np, expected, params)
-
-    return (t1, t2, t3, t4)
+    def test_pol_ER(self):
+        pol_ER = polarization.make_pol_er_func(1.6, 1000)
+        distribution = np.array([[0.05, 0.15, 0.25, 0.35, 0.45 ,0.55, 0.65, 0.75, 0.85, 0.95], [0.27272727, 0.0, 0.0, 0.0 , 0.0, 0.45454545, 0.0, 0.0, 0.0, 0.27272727]])
+        expected = 62.29879620526804
+
+        self.assertAlmostEqual(pol_ER(distribution), expected, places=10)
+
+    def test_pol_ER_discretized(self):
+        pol_ER_discretized = polarization.make_pol_er_discretized_func(1.6, 1000, 10)
+        beliefs = [0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0]
+        expected = 62.298798448024755
+
+        self.assertAlmostEqual(pol_ER_discretized(beliefs), expected, places=10)
+
+class TestBuildInfluence(unittest.TestCase):
+    def test_build_inf_graph_clique(self):
+        num_agents = 5
+        belief = 0.7
+        expected = [[0.7, 0.7, 0.7, 0.7, 0.7],
+        [0.7, 0.7, 0.7, 0.7, 0.7],
+        [0.7, 0.7, 0.7, 0.7, 0.7],
+        [0.7, 0.7, 0.7, 0.7, 0.7],
+        [0.7, 0.7, 0.7, 0.7, 0.7]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_clique(num_agents, belief), expected)
+
+    def test_build_inf_graph_2_groups_disconnected(self):
+        num_agents = 5
+        expected = [[0.3, 0.3, 0.3, 0.0, 0.0],
+        [0.3, 0.3, 0.3, 0.0, 0.0],
+        [0.3, 0.3, 0.3, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.3, 0.3],
+        [0.0, 0.0, 0.0, 0.3, 0.3]]
+        np.testing.assert_equal(polarization.build_inf_graph_2_groups_disconnected(num_agents, 0.3), expected)
+
+        num_agents = 4
+        expected = [[0.3, 0.3, 0.0, 0.0],
+        [0.3, 0.3, 0.0, 0.0],
+        [0.0, 0.0, 0.3, 0.3],
+        [0.0, 0.0, 0.3, 0.3]]
+        np.testing.assert_equal(polarization.build_inf_graph_2_groups_disconnected(num_agents, 0.3), expected)
+
+    def test_build_inf_graph_2_groups_faint(self):
+        num_agents = 5
+        expected = [[0.3, 0.3, 0.3, 0.1, 0.1],
+        [0.3, 0.3, 0.3, 0.1, 0.1],
+        [0.3, 0.3, 0.3, 0.1, 0.1],
+        [0.1, 0.1, 0.1, 0.3, 0.3],
+        [0.1, 0.1, 0.1, 0.3, 0.3]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_2_groups_faint(num_agents, 0.1, 0.3), expected)
+
+        num_agents = 4
+        expected = [[0.3, 0.3, 0.1, 0.1],
+        [0.3, 0.3, 0.1, 0.1],
+        [0.1, 0.1, 0.3, 0.3],
+        [0.1, 0.1, 0.3, 0.3]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_2_groups_faint(num_agents, 0.1, 0.3), expected)
+
+    def test_build_inf_graph_2_influencers_balanced(self):
+        num_agents = 5
+        expected = [[0.7, 0.7, 0.7, 0.7, 0.1],
+        [0.1, 0.2, 0.2, 0.2, 0.1],
+        [0.1, 0.2, 0.2, 0.2, 0.1],
+        [0.1, 0.2, 0.2, 0.2, 0.1],
+        [0.1, 0.7, 0.7, 0.7, 0.7]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_2_influencers_balanced(num_agents, 0.1, 0.7, 0.2), expected)
+
+        num_agents = 4
+        expected = [[0.7, 0.7, 0.7, 0.1],
+        [0.1, 0.2, 0.2, 0.1],
+        [0.1, 0.2, 0.2, 0.1],
+        [0.1, 0.7, 0.7, 0.7]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_2_influencers_balanced(num_agents, 0.1, 0.7, 0.2), expected)
+
+    def test_build_inf_graph_2_influencers_unbalanced(self):
+        num_agents = 5
+        expected = [[0.5, 0.5, 0.5, 0.5, 0.1],
+        [0.3, 0.2, 0.2, 0.2, 0.1],
+        [0.3, 0.2, 0.2, 0.2, 0.1],
+        [0.3, 0.2, 0.2, 0.2, 0.1],
+        [0.3, 0.4, 0.4, 0.4, 0.4]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_2_influencers_unbalanced(num_agents, 0.5, 0.4, 0.3, 0.1, 0.2), expected)
+
+        num_agents = 4
+        expected = [[0.5, 0.5, 0.5, 0.1],
+        [0.3, 0.2, 0.2, 0.1],
+        [0.3, 0.2, 0.2, 0.1],
+        [0.3, 0.4, 0.4, 0.4]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_2_influencers_unbalanced(num_agents, 0.5, 0.4, 0.3, 0.1, 0.2), expected)
+
+    def test_build_inf_graph_circular(self):
+        num_agents = 6
+        i = 0.6
+        expected = [[0, i, 0, 0, 0, 0],
+        [0, 0, i, 0, 0, 0],
+        [0, 0, 0, i, 0, 0],
+        [0, 0, 0, 0, i, 0],
+        [0, 0, 0, 0, 0, i],
+        [i, 0, 0, 0, 0, 0]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_circular(num_agents, i), expected)
+
+        num_agents = 2
+        expected = [[0, i], [i, 0]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_circular(num_agents, i), expected)
+
+        num_agents = 1
+        expected = [[i]]
+
+        np.testing.assert_equal(polarization.build_inf_graph_circular(num_agents, i), expected)
+
+class TestUpdateFunctions(unittest.TestCase):
+    def test_update_agent_pair(self):
+        belief_ai = 0.7
+        belief_aj = 0.2
+        influence = 0.2
+        update_type = polarization.OldUpdate.BACKFIRE
+        confbias_discount = 0.5
+        backfire_belief_threshold = 0.4
+        backfire_influence_threshold = 0.2
+        params = [belief_ai, belief_aj, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+
+        self.assertEqual(polarization.update_agent_pair(*params), 0.8807970779778823)
+
+        params[3] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_agent_pair(*params), 0.6)
+
+        params[3] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_agent_pair(*params), 0.6499999999999999)
+
+        params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_agent_pair(*params), 0.6499999999999999)
+
+    def test_update_agent_vs_all(self):
+        agent = 3
+        beliefs = [0.1, 0.2, 0.3, 0.7]
+        influence = np.full((4,4),0.2)
+        update_type = polarization.OldUpdate.BACKFIRE
+        confbias_discount = 0.5
+        backfire_belief_threshold = 0.4
+        backfire_influence_threshold = 0.2
+        params = [beliefs, influence, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+
+        self.assertEqual(polarization.update_agent_vs_all(*params), 0.77940609537099)
+
+        params[3] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_agent_vs_all(*params), 0.625)
+
+        params[3] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_agent_vs_all(*params), 0.6624999999999999)
+
+        params[3] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_agent_vs_all(*params), 0.6635)
+
+    def test_update_all(self):
+        beliefs = [0.1, 0.2, 0.3, 0.7]
+        influence = np.full((4,4),0.2)
+        update_type = polarization.OldUpdate.BACKFIRE
+        confbias_discount = 0.5
+        backfire_belief_threshold = 0.4
+        backfire_influence_threshold = 0.2
+        params = [beliefs, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+        expected = [0.09204064278828998, 0.1618564682943917, 0.30500000000000005, 0.77940609537099]
+
+        self.assertEqual(polarization.update_all(*params), expected)
+
+        expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
+        params[2] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_all(*params), expected)
+
+        expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
+        params[2] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_all(*params), expected)
+
+        expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
+        params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_all(*params), expected)
+
+    def test_update_all_numpy(self):
+        beliefs = [0.1, 0.2, 0.3, 0.7]
+        influence = np.full((4,4),0.2)
+        update_type = polarization.OldUpdate.BACKFIRE
+        confbias_discount = 0.5
+        backfire_belief_threshold = 0.4
+        backfire_influence_threshold = 0.2
+        params = [beliefs, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold]
+        expected = [0.09204064278828998, 0.1618564682943917, 0.30500000000000005, 0.77940609537099]
+
+        self.assertEqual(polarization.update_all_np(*params), expected)
+
+        expected = [0.14500000000000002, 0.22499999999999998, 0.30500000000000005, 0.625]
+        params[2] = polarization.OldUpdate.CLASSIC
+        self.assertEqual(polarization.update_all_np(*params), expected)
+
+        expected = [0.13, 0.2125, 0.29500000000000004, 0.6624999999999999]
+        params[2] = polarization.OldUpdate.CONFBIAS_SHARP
+        self.assertEqual(polarization.update_all_np(*params), expected)
+
+        expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
+        params[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
+        self.assertEqual(polarization.update_all_np(*params), expected)
 
 if __name__ == "__main__":
-    print("Running tests ...")
-    print()
-
-    tests = []
-
-    tests.extend(test_build_uniform_beliefs())
-    tests.extend(test_build_old_mild_beliefs())
-    tests.extend(test_build_old_extreme_beliefs())
-    tests.extend(test_build_old_triple_beliefs())
-    tests.extend(test_build_consensus_beliefs())
-    tests.extend(test_build_beliefs())
-
-    tests.extend(test_belief_2_distribution())
-    tests.extend(test_pol_ER())
-    tests.extend(test_pol_ER_discretized())
-
-    tests.extend(test_build_inf_graph_clique())
-    tests.extend(test_build_inf_graph_2_groups_disconnected())
-    tests.extend(test_build_inf_graph_2_groups_faint())
-    tests.extend(test_build_inf_graph_2_influencers_balanced())
-    tests.extend(test_build_inf_graph_2_influencers_unbalanced())
-    tests.extend(test_build_inf_graph_circular())
-
-    tests.extend(test_update_agent_pair())
-    tests.extend(test_update_agent_vs_all())
-    tests.extend(test_update_all())
-    tests.extend(test_update_all_numpy())
-
-    success = all(tests)
-    status = "\x1b[31mFAILED\x1b[0m"
-    if success:
-        status = "\x1b[32mok\x1b[0m"
-
-    print()
-    print("test result: {}. {} passed; {} failed".format(status, tests.count(True), tests.count(False)))
-    print()
-    if not success:
-        exit(1)
+    unittest.main()
