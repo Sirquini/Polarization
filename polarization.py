@@ -305,20 +305,20 @@ def build_inf_graph_2_influencers_balanced(num_agents, influencers_incoming_valu
     """Returns the influence graph for for "balanced 2-influencers" scenario."""
     inf_graph = np.full((num_agents, num_agents), others_belief_value)
     ## Sets the influence of agent 0 on all others
-    inf_graph[0, :-1] = influencers_outgoing_value      
+    inf_graph[0, :-1] = influencers_outgoing_value
     ## Sets the influence of agent n-1 on all others
     inf_graph[-1, 1:] = influencers_outgoing_value
     ## Sets the influence of all other agents on agent 0.
     inf_graph[1:,0] = influencers_incoming_value
     ## Sets the influence of all other agents on agent n-1.
-    inf_graph[:-1, -1] = influencers_incoming_value    
+    inf_graph[:-1, -1] = influencers_incoming_value
     return inf_graph
 
 def build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_value_first, influencers_outgoing_value_second, influencers_incoming_value_first, influencers_incoming_value_second, others_belief_value):
     """Returns the influence graph for for "unbalanced 2-influencers" scenario."""
     inf_graph = np.full((num_agents,num_agents), others_belief_value)
     ## Sets the influence of agent 0 on all others
-    inf_graph[0, :-1] = influencers_outgoing_value_first       
+    inf_graph[0, :-1] = influencers_outgoing_value_first
     ## Sets the influence of agent n-1 on all others
     inf_graph[-1, 1:] = influencers_outgoing_value_second
     ## Sets the influence of all other agents on agent 0.
@@ -330,9 +330,9 @@ def build_inf_graph_2_influencers_unbalanced(num_agents, influencers_outgoing_va
 def build_inf_graph_circular(num_agents, value):
     """Returns the imfluemce graph for "circular influence" scenario."""
     inf_graph = np.zeros((num_agents, num_agents))
-    for i in range(num_agents-1):
-        inf_graph[i, i+1] = value
-    inf_graph[-1, 0] = value
+    for i in range(num_agents):
+        inf_graph[i, i] = 1.0
+        inf_graph[i, (i+1) % num_agents] = value
     return inf_graph
 
 class Influence(Enum):
@@ -404,12 +404,18 @@ class Update(Enum):
     CONFBIAS = 2
 
 def neighbours_update(beliefs, inf_graph):
-    """Applies the classic update function.
+    """Applies the classic update function as matrix multiplication.
     
     For each agent, update their beliefs factoring the authority bias and
     the beliefs of all the agents' neighbors.
+
+    Equivalent to:
+
+    [blf_ai + np.mean([inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0]) for agent, blf_ai in enumerate(beliefs)]
+
     """
-    return [blf_ai + np.mean([inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0 or other == agent]) for agent, blf_ai in enumerate(beliefs)]
+    neighbours = [np.count_nonzero(inf_graph[:, i]) for i, _ in enumerate(beliefs)]
+    return (beliefs @ inf_graph - np.add.reduce(inf_graph) * beliefs) / neighbours + beliefs
 
 def neighbours_cb_update(beliefs, inf_graph):
     """Applies the confirmation-bias update function.
@@ -542,7 +548,7 @@ def make_old_update_fn(update_type: OldUpdate, confbias_discount=CONFBIAS_DISCOU
 
 class Simulation:
     def __init__(self, belief_vec, inf_graph, update_fn=make_update_fn(Update.CLASSIC), pol_measure=None, num_bins=NUM_BINS):
-        self.belief_vec = belief_vec
+        self.belief_vec = np.array(belief_vec)
         self.inf_graph = inf_graph
         self.update_fn = update_fn
         self.num_bins = num_bins
@@ -581,7 +587,7 @@ class Simulation:
         pol_history = []
         for _, (belief_vec_state, pol_state) in zip(range(max_time), self):
             # Stop if a stable state is reached
-            if smart_stop and belief_history and belief_history[-1] == belief_vec_state:
+            if smart_stop and belief_history and np.array_equal(belief_history[-1], belief_vec_state):
                 break
             belief_history.append(belief_vec_state)
             pol_history.append(pol_state)

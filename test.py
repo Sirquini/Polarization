@@ -227,17 +227,17 @@ class TestBuildInfluence(unittest.TestCase):
     def test_build_inf_graph_circular(self):
         num_agents = 6
         i = 0.6
-        expected = [[0, i, 0, 0, 0, 0],
-        [0, 0, i, 0, 0, 0],
-        [0, 0, 0, i, 0, 0],
-        [0, 0, 0, 0, i, 0],
-        [0, 0, 0, 0, 0, i],
-        [i, 0, 0, 0, 0, 0]]
+        expected = [[1.0, i, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, i, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, i, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, i, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0, i],
+        [i, 0.0, 0.0, 0.0, 0.0, 1.0]]
 
         np.testing.assert_equal(polarization.build_inf_graph_circular(num_agents, i), expected)
 
         num_agents = 2
-        expected = [[0, i], [i, 0]]
+        expected = [[1.0, i], [i, 1.0]]
 
         np.testing.assert_equal(polarization.build_inf_graph_circular(num_agents, i), expected)
 
@@ -257,7 +257,7 @@ class TestUpdateFunctions(unittest.TestCase):
 
     def test_neigbours_update(self):
         update_type = polarization.Update.CLASSIC
-        self.assertEqual(polarization.neighbours_update(self.beliefs, self.inf_graph), self.expected[update_type])
+        self.assertEqual(list(polarization.neighbours_update(self.beliefs, self.inf_graph)), self.expected[update_type])
 
     def test_neigbours_cb_update(self):
         update_type = polarization.Update.CONFBIAS
@@ -266,7 +266,7 @@ class TestUpdateFunctions(unittest.TestCase):
     def test_make_update_fn(self):
         update_type = polarization.Update.CLASSIC
         fn = polarization.make_update_fn(update_type)
-        self.assertEqual(fn(self.beliefs, self.inf_graph), self.expected[update_type])
+        self.assertEqual(list(fn(self.beliefs, self.inf_graph)), self.expected[update_type])
 
         update_type = polarization.Update.CONFBIAS
         fn = polarization.make_update_fn(update_type)
@@ -345,6 +345,40 @@ class TestOldUpdateFunctions(unittest.TestCase):
         expected = [0.12450000000000001, 0.2125, 0.2995, 0.6635]
         self.params3[2] = polarization.OldUpdate.CONFBIAS_SMOOTH
         self.assertEqual(polarization.update_all_np(*self.params3), expected)
+
+class TestSimulationClass(unittest.TestCase):
+    def test_default_constructor(self):
+        blfs = polarization.build_belief(polarization.Belief.UNIFORM)
+        infs = polarization.build_influence(polarization.Influence.CIRCULAR)
+        simulation = polarization.Simulation(blfs, infs)
+        pol_hist, _, pol = simulation.run()
+
+        expected_pol_history = [
+            24.36677041556326, 24.36677041556326, 24.36677041556326, 24.290343683819472, 23.79989503797555,
+            24.083649478941968, 24.36677041556326, 24.006589242853053, 23.79989503797555, 24.006589242853053,
+            23.79989503797555, 23.67880624990026, 23.79989503797555, 23.67880624990026, 23.79989503797555,
+            23.67880624990026, 23.245866701217484, 23.67880624990026, 23.79989503797555, 23.67880624990026,
+            23.245866701217484, 23.484678667231087, 23.79989503797555, 23.48467866723109, 23.245866701217484,
+            23.484678667231087, 23.606717521496428, 23.48467866723109, 23.117928482118593, 23.484678667231087,
+            23.411639872637206, 23.48467866723109, 23.117928482118593, 23.117928482118593, 23.411639872637206,
+            23.245866701217484, 23.117928482118593, 23.117928482118593, 23.411639872637206, 23.245866701217484,
+            22.813697682367543, 23.117928482118593, 23.411639872637206, 23.245866701217484, 22.813697682367543,
+            23.117928482118593, 23.411639872637206, 23.13869447973335, 22.813697682367543, 22.967060493002414,
+            23.411639872637206, 22.967060493002414, 22.813697682367543, 22.967060493002414, 23.305724295384007,
+            22.967060493002414, 22.813697682367543, 22.967060493002414, 23.196643102904783, 22.967060493002414,
+            22.813697682367543, 22.967060493002414, 22.98624368300415, 22.813697682367543, 22.813697682367543,
+            22.813697682367543, 22.98624368300415, 22.813697682367543, 22.813697682367543, 22.813697682367543,
+            22.98624368300415, 22.813697682367543, 22.67737300401307, 22.813697682367543, 22.98624368300415,
+            22.813697682367543, 22.67737300401307, 22.813697682367543, 22.98624368300415, 22.813697682367543,
+            22.67737300401307, 22.747405468655625, 22.813697682367543, 22.747405468655625, 22.67737300401307,
+            22.747405468655625, 22.813697682367543, 22.747405468655625, 22.67737300401307, 22.747405468655625,
+            22.67737300401307, 22.747405468655625, 22.67737300401307, 22.747405468655625, 22.67737300401307,
+            22.636707883547253, 22.67737300401307, 22.747405468655625, 22.67737300401307, 22.523602365978626
+        ]
+        np.testing.assert_equal(pol_hist, expected_pol_history)
+        
+        expected_pol = 22.523602365978626
+        self.assertAlmostEqual(pol, expected_pol)
 
 if __name__ == "__main__":
     unittest.main()
