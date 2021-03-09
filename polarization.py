@@ -425,6 +425,21 @@ def neighbours_cb_update(beliefs, inf_graph):
     """
     return [blf_ai + np.mean([(1 - np.abs(blf_aj - blf_ai)) * inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0 or other == agent]) for agent, blf_ai in enumerate(beliefs)]
 
+def np_neighbours_cb_update(beliefs, inf_graph):
+    """Applies the classic update function as matrix multiplication.
+    
+    For each agent, update their beliefs factoring the authority bias,
+    confirmation-bias and the beliefs of all the agents' neighbors.
+
+    Equivalent to:
+    [blf_ai + np.mean([(1 - np.abs(blf_aj - blf_ai)) * inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0]) for agent, blf_ai in enumerate(beliefs)]
+    """
+    neighbours = [np.count_nonzero(inf_graph[:, i]) for i, _ in enumerate(beliefs)]
+    diff = np.ones((len(beliefs), 1)) @ beliefs[np.newaxis]
+    diff = np.transpose(diff) - diff
+    infs = inf_graph * (1 - np.abs(diff)) * diff
+    return np.add.reduce(infs) / neighbours + beliefs
+
 def normalize_graph(inf_graph):
     """Allows us to use apply the DeGroot Update function."""
     num_agents = len(inf_graph)
@@ -545,6 +560,10 @@ def make_old_update_fn(update_type: OldUpdate, confbias_discount=CONFBIAS_DISCOU
     def update_fn(belief_vec, inf_graph):
         return update_all(belief_vec, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_belief_threshold)
     return update_fn
+
+#######################################
+## Main Simulation Class Implementation
+#######################################
 
 class Simulation:
     def __init__(self, belief_vec, inf_graph, update_fn=make_update_fn(Update.CLASSIC), pol_measure=None, num_bins=NUM_BINS):
