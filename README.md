@@ -1,5 +1,7 @@
 # A Model for the Dynamics of Polarization
 
+[![CI](https://github.com/Sirquini/Polarization/actions/workflows/ci.yml/badge.svg)](https://github.com/Sirquini/Polarization/actions/workflows/ci.yml)
+
 All the functions and structures needed are located in `polarization.py`. Implemented for Python 3.
 
 ## Dependencies
