@@ -375,7 +375,7 @@ class TestSimulationClass(unittest.TestCase):
             22.67737300401307, 22.747405468655625, 22.67737300401307, 22.747405468655625, 22.67737300401307,
             22.636707883547253, 22.67737300401307, 22.747405468655625, 22.67737300401307, 22.523602365978626
         ]
-        np.testing.assert_equal(pol_hist, expected_pol_history)
+        np.testing.assert_allclose(pol_hist, expected_pol_history)
         
         expected_pol = 22.523602365978626
         self.assertAlmostEqual(pol, expected_pol)
