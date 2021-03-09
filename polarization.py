@@ -449,17 +449,17 @@ class OldUpdate(Enum):
     CONFBIAS_SHARP = 3
     BACKFIRE = 4
 
-def update_all(belief_vec, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
+def update_all(belief_vec, inf_graph, update_type: OldUpdate, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     """Updates the whole belief state"""
     num_agents = len(belief_vec)
     return [update_agent_vs_all(belief_vec, inf_graph, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold) for agent in range(num_agents)]
 
-def update_all_np(belief_vec, inf_graph, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
+def update_all_np(belief_vec, inf_graph, update_type: OldUpdate, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     """Updates the whole belief state"""
     num_agents = len(belief_vec)
     return [np.mean([update_agent_pair(belief_vec[agent], belief_vec[other], inf_graph[other, agent], update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold) for other in range(num_agents)]) for agent in range(num_agents)]
 
-def update_agent_vs_all(belief_vec, inf_graph, agent, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
+def update_agent_vs_all(belief_vec, inf_graph, agent, update_type: OldUpdate, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     """Updates the belief value of one individual agent considering the effect
     of all other agents on him.
     """
@@ -467,7 +467,7 @@ def update_agent_vs_all(belief_vec, inf_graph, agent, update_type, confbias_disc
     belief = sum((update_agent_pair(belief_vec[agent], belief_vec[other], inf_graph[other, agent], update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold) for other in range(num_agents)))
     return belief / num_agents
 
-def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
+def update_agent_pair(belief_ai, belief_aj, influence, update_type: OldUpdate, confbias_discount, backfire_belief_threshold, backfire_influence_threshold):
     """Updates the belief value of one individual ai considering the effect one
     other individual aj on him.
     """
@@ -506,7 +506,7 @@ def update_agent_pair(belief_ai, belief_aj, influence, update_type, confbias_dis
     # If the update function is not defined
     return 0
 
-def run_until_stable(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, update_type=Update.CLASSIC, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
+def run_until_stable(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, update_type=OldUpdate.CLASSIC, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
     pol_ER_discretized = make_pol_er_discretized_func(ALPHA, K, num_bins)
 
     ## Creates temporary values to store evolution with time.
