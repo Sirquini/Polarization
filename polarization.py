@@ -454,6 +454,16 @@ def degroot_update(beliefs, inf_graph):
     # TODO: replace with matrix multiplication
     return [sum(blf * infs[other, agent] for other, blf in enumerate(beliefs)) for agent, _ in enumerate(beliefs)]
 
+def make_update_fn(update_type: Update):
+    if update_type is Update.CLASSIC:
+        return neighbours_update
+    if update_type is Update.CONFBIAS:
+        return neighbours_cb_update
+    if isinstance(update_type, Update):
+        raise NotImplementedError(f"Not implemented for {update_type}")
+    else:
+        raise TypeError(f"update_type must be an Update")
+
 ######################################
 ## Old Update Functions Implementation
 ######################################
@@ -545,16 +555,6 @@ def run_until_stable(belief_vec, inf_graph, max_time=100, num_bins=NUM_BINS, upd
             break
 
     return (np.array(pol_history), np.array(belief_history), pol_history[-1])
-
-def make_update_fn(update_type: Update):
-    if update_type is Update.CLASSIC:
-        return neighbours_update
-    if update_type is Update.CONFBIAS:
-        return neighbours_cb_update
-    if isinstance(update_type, Update):
-        raise NotImplementedError(f"Not implemented for {update_type}")
-    else:
-        raise TypeError(f"update_type must be an Update")
 
 def make_old_update_fn(update_type: OldUpdate, confbias_discount=CONFBIAS_DISCOUNT, backfire_belief_threshold=BACKFIRE_BELIEF_THRESHOLD, backfire_influence_threshold=BACKFIRE_INFLUENCE_THRESHOLD):
     def update_fn(belief_vec, inf_graph):
