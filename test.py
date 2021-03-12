@@ -261,7 +261,7 @@ class TestUpdateFunctions(unittest.TestCase):
 
     def test_neigbours_cb_update(self):
         update_type = polarization.Update.CONFBIAS
-        self.assertEqual(polarization.neighbours_cb_update(self.beliefs, self.inf_graph), self.expected[update_type])
+        self.assertEqual(list(polarization.neighbours_cb_update(self.beliefs, self.inf_graph)), self.expected[update_type])
 
     def test_make_update_fn(self):
         update_type = polarization.Update.CLASSIC
@@ -270,7 +270,7 @@ class TestUpdateFunctions(unittest.TestCase):
 
         update_type = polarization.Update.CONFBIAS
         fn = polarization.make_update_fn(update_type)
-        self.assertEqual(fn(self.beliefs, self.inf_graph), self.expected[update_type])
+        self.assertEqual(list(fn(self.beliefs, self.inf_graph)), self.expected[update_type])
 
 class TestOldUpdateFunctions(unittest.TestCase):
     def setUp(self):

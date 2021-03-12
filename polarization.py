@@ -418,14 +418,6 @@ def neighbours_update(beliefs, inf_graph):
     return (beliefs @ inf_graph - np.add.reduce(inf_graph) * beliefs) / neighbours + beliefs
 
 def neighbours_cb_update(beliefs, inf_graph):
-    """Applies the confirmation-bias update function.
-    
-    For each agent, update their beliefs factoring the authority bias,
-    confirmation-bias and the beliefs of all the agents' neighbors.
-    """
-    return [blf_ai + np.mean([(1 - np.abs(blf_aj - blf_ai)) * inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0 or other == agent]) for agent, blf_ai in enumerate(beliefs)]
-
-def np_neighbours_cb_update(beliefs, inf_graph):
     """Applies the classic update function as matrix multiplication.
     
     For each agent, update their beliefs factoring the authority bias,
@@ -435,7 +427,7 @@ def np_neighbours_cb_update(beliefs, inf_graph):
     [blf_ai + np.mean([(1 - np.abs(blf_aj - blf_ai)) * inf_graph[other, agent] * (blf_aj - blf_ai) for other, blf_aj in enumerate(beliefs) if inf_graph[other, agent] > 0]) for agent, blf_ai in enumerate(beliefs)]
     """
     neighbours = [np.count_nonzero(inf_graph[:, i]) for i, _ in enumerate(beliefs)]
-    diff = np.ones((len(beliefs), 1)) @ beliefs[np.newaxis]
+    diff = np.ones((len(beliefs), 1)) @  np.asarray(beliefs)[np.newaxis]
     diff = np.transpose(diff) - diff
     infs = inf_graph * (1 - np.abs(diff)) * diff
     return np.add.reduce(infs) / neighbours + beliefs

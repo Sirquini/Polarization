@@ -107,8 +107,6 @@ For creating the initial beliefs:
 
 - `build_belief(belief_type: Belief, num_agents, **kwargs)`
 
-> If an error related to NumPy arrays occurs while using a beliefs configuration generated with `build_belief`, like directly using the `CLASSIC` update function, convert the belief configuration to a NumPy array before using it. The `Simulation` class takes care of this step while the provided _update functions_ and `build_belief` are updated to explicictly use NumPy arrays instead of lists.
-
 For creating the influence graph:
 
 - `build_influence(inf_type: Influence, num_agents, **kwargs)`
