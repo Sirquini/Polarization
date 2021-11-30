@@ -84,13 +84,13 @@ INFLUENCERS_BALANCED_OTHERS = 0.1
 ## for 2_influencers_unbalanced influence-graph: level of influence agent 0 exerts on all others
 INFLUENCERS_UNBALANCED_OUTGOING_FIRST = 0.8
 ## for 2_influencers_unbalanced influence-graph: level of influence agent n-1 exerts on all others
-INFLUENCERS_UNBALANCED_OUTGOING_SECOND = 0.5
+INFLUENCERS_UNBALANCED_OUTGOING_SECOND = 0.4
 ## for 2_influencers_unbalanced influence-graph: level of influence agent 0 receives from all others
 INFLUENCERS_UNBALANCED_INCOMING_FIRST = 0.1
 ## for 2_influencers_unbalanced influence-graph: level of influence agent n-1 receives from all others
 INFLUENCERS_UNBALANCED_INCOMING_SECOND = 0.1
 ## for 2_influencers_unbalanced influence-graph: level of influence all other agents exert on all others
-INFLUENCERS_UNBALANCED_OTHERS = 0.2
+INFLUENCERS_UNBALANCED_OTHERS = 0.1
 
 ## for circular influence-graph: belief value of all agents on a circular influence graph
 CIRCULAR_INF_VALUE = 0.5
