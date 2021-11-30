@@ -5,4 +5,5 @@ __pycache__
 .ipynb_checkpoints/
 *.swp
 debugging.py
+temp.py
 generated/
